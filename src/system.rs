@@ -48,9 +48,10 @@ impl<'s> System<'s> for SystemColorMap {
                             Vector2::new(dimensions.width(), dimensions.height()),
                             camera_transform,
                         );
+                    let coord = Vector3::new(coord[0], coord[1], coord[2]);
 
                     for tilemap in (&mut tilemaps).join() {
-                        if let Some(tile) = tilemap.to_tile(&Vector3::new(coord[0], coord[1], coord[2])) {
+                        if let Some(tile) = tilemap.to_tile(&coord) {
                             tilemap.get_mut(&tile).unwrap().terrain = color;
                         }
                     }
