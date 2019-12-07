@@ -34,6 +34,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(SystemCameraMovement::default(), "Camera Movement System", &[])
+        .with(SystemColorMap::default(), "Map Coloring System", &["Camera Movement System"])
         .with_bundle(
             InputBundle::<StringBindings>::new()
                 .with_bindings_from_file(input_config_path)?,

@@ -3,8 +3,10 @@ use crate::misc::*;
 use amethyst::{
     prelude::*,
     core::{ math::Vector3, Transform },
+    input::{ is_close_requested, is_key_down, },
     renderer::camera::Camera,
     window::ScreenDimensions,
+    winit,
 };
 use amethyst_tiles::{ TileMap, MortonEncoder2D, };
 
@@ -42,5 +44,22 @@ impl SimpleState for PocLoad {
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         Trans::None
+    }
+
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
+        let StateData { .. } = data;
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else {
+                Trans::None
+            }
+        } else {
+            Trans::None
+        }
     }
 }

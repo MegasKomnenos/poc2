@@ -12,6 +12,7 @@ ron = "0.5.1"
 rayon = "1.2.1"
 rand = "0.7.2"
 voronoi = "0.1.4"
+pathfinding = "2"
 
 [features]
 empty = ["amethyst/empty"]
