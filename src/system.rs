@@ -104,8 +104,10 @@ impl<'s> System<'s> for SystemMovement {
             });
         });
 
-        for (entity, movement, transform) in (&entities, &mut movements, &mut transforms).join() {
+        for (entity, movement, mut transform) in (&entities, &mut movements, &mut transforms.restrict_mut()).join() {
             if movement.targets.len() > 0 {
+                let transform = transform.get_mut_unchecked();
+
                 for tilemap in (&mut tilemaps).join() {
                     if let Some(_) = tilemap.to_tile(transform.translation()) {
                         let mut velocity = tilemap.to_world(movement.targets.last().unwrap()) - transform.translation();
