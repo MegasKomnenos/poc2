@@ -71,10 +71,10 @@ impl<'s> System<'s> for SystemSpawnChar {
                         )
                         .with(
                             ComponentMovement { 
-                                targets: vec![Point3::new(49, 49, 0)], 
+                                targets: vec![Point3::new(10, 10, 0), Point3::new(10, 90, 0), Point3::new(90, 90, 0)], 
                                 velocity: Vector3::new(0.0, 0.0, 0.0),
-                                speed_limit: 1.0, 
-                                acceleration: 0.1, 
+                                speed_limit: 0.5, 
+                                acceleration: 0.05, 
                             },
                             &mut movements,
                         )
@@ -105,29 +105,39 @@ impl<'s> System<'s> for SystemMovement {
         });
 
         for (entity, movement, transform) in (&entities, &mut movements, &mut transforms).join() {
-            if let Some(target) = movement.targets.first() {
+            if movement.targets.len() > 0 {
                 for tilemap in (&mut tilemaps).join() {
                     if let Some(_) = tilemap.to_tile(transform.translation()) {
-                        let mut velocity = tilemap.to_world(target) - transform.translation();
-                        let mut speed = (velocity[0].powf(2.0) + velocity[1].powf(2.0) + velocity[2].powf(2.0)).sqrt();
-                        let mut t = speed / 5.0;
+                        let mut velocity = tilemap.to_world(movement.targets.last().unwrap()) - transform.translation();
+                        let distance = (velocity[0].powf(2.0) + velocity[1].powf(2.0) + velocity[2].powf(2.0)).sqrt();
 
-                        if t > 1.0 {
-                            t = 1.0;
-                        }
-
-                        if speed > movement.acceleration {
-                            velocity *= movement.acceleration / speed;
+                        if distance > movement.acceleration {
+                            velocity *= movement.acceleration / distance;
                         }
 
                         movement.velocity += velocity;
-                        speed = (movement.velocity[0].powf(2.0) + movement.velocity[1].powf(2.0) + movement.velocity[2].powf(2.0)).sqrt();
+                        let speed = (movement.velocity[0].powf(2.0) + movement.velocity[1].powf(2.0) + movement.velocity[2].powf(2.0)).sqrt();
+                        let mut speed_limit = movement.speed_limit;
 
-                        if speed > movement.speed_limit * t {
-                            movement.velocity *= movement.speed_limit * t / speed;
+                        if distance < 10.0 {
+                            if movement.targets.len() > 0 {
+                                if distance < speed / 2.0 {
+                                    movement.targets.pop();
+                                }
+                            } else {
+                                speed_limit *= distance / 10.0;
+                            }
+                        }
+
+                        if speed > speed_limit {
+                            movement.velocity *= speed_limit / speed;
                         }
 
                         *transform.translation_mut() += movement.velocity;
+
+                        if distance == 0.0 {
+                            movement.targets.pop();
+                        }
 
                         tilemap.get_mut(&tilemap.to_tile(transform.translation()).unwrap()).unwrap().chars.push(entity.clone());
                     }
