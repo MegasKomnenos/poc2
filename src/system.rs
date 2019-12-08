@@ -16,6 +16,7 @@ use amethyst::{
 };
 use amethyst_tiles::{ MapStorage, TileMap, Map, Region, };
 use rayon::iter::ParallelIterator;
+use voronoi::Point;
 
 #[derive(Default)]
 pub struct SystemSpawnChar;
@@ -141,11 +142,68 @@ impl<'s> System<'s> for SystemMovement {
                             movement.targets.pop();
                         }
 
+                        let coord = tilemap.to_tile(transform.translation()).unwrap();
+
+                        if tilemap.get_mut(&coord).unwrap().terrain == 1 {
+                            let coord_prev = transform.translation() - movement.velocity;
+
+                            let line = [
+                                Point::new(coord_prev[0] as f64, coord_prev[1] as f64), 
+                                Point::new(transform.translation()[0] as f64, transform.translation()[1] as f64)
+                            ];
+
+                            let points = tilemap.to_world(&coord);
+
+                            let p0 = Point::new((points[0] - 0.5) as f64, (points[1] - 0.5) as f64);
+                            let p1 = Point::new((points[0] + 0.5) as f64, (points[1] - 0.5) as f64);
+                            let p2 = Point::new((points[0] + 0.5) as f64, (points[1] + 0.5) as f64);
+                            let p3 = Point::new((points[0] - 0.5) as f64, (points[1] + 0.5) as f64);
+
+                            let point: Point;
+
+                            if let Some(p) = segment_intersection(&line, &[p0, p1]) {
+                                point = p;
+                            } else if let Some(p) = segment_intersection(&line, &[p1, p2]) {
+                                point = p;
+                            } else if let Some(p) = segment_intersection(&line, &[p2, p3]) {
+                                point = p;
+                            } else if let Some(p) = segment_intersection(&line, &[p3, p0]) {
+                                point = p;
+                            } else {
+                                panic!("Segment Intersection Error");
+                            }
+
+                            *transform.translation_mut() = Vector3::new(point.x.into_inner() as f32, point.y.into_inner() as f32, 0.0);
+                        }
+
                         tilemap.get_mut(&tilemap.to_tile(transform.translation()).unwrap()).unwrap().chars.push(entity.clone());
                     }
                 }
             }
-        };
+        }
+
+        for (entity, movement, mut transforms) in (&entities, &movements, &mut transforms.restrict_mut()).join() {
+            let transform = transforms.get_unchecked();
+
+            let mut collision = Vector3::new(0.0, 0.0, 0.0);
+            let mut collision_num = 0.0;
+
+            if collision_num > 0.0 {
+                let transform = transforms.get_mut_unchecked();
+
+                for tilemap in (&mut tilemaps).join() {
+                    if let Some(coord) = tilemap.to_tile(transform.translation()) {
+                        let tile = tilemap.get_mut(&coord).unwrap();
+
+                        tile.chars.remove(tile.chars.iter().position(|&x| x == entity).unwrap());
+
+                        *transform.translation_mut() += collision / collision_num;
+
+                        tilemap.get_mut(&tilemap.to_tile(transform.translation()).unwrap()).unwrap().chars.push(entity.clone());
+                    }
+                }
+            }
+        }
     }
 }
 
