@@ -1,6 +1,6 @@
 use amethyst::{
     core::math::Point3,
-    ecs::{ World, WorldExt, },
+    ecs::{ World, WorldExt, Entity, },
     assets::{ Loader, AssetStorage, },
     renderer::{
         formats::texture::ImageFormat,
@@ -13,6 +13,7 @@ use amethyst_tiles::Tile;
 #[derive(Default, Clone)]
 pub struct MiscTile {
     pub terrain: usize,
+    pub chars: Vec<Entity>,
 }
 
 impl Tile for MiscTile {
@@ -35,4 +36,18 @@ pub fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> S
         (),
         &sprite_sheet_store,
     )
+}
+
+pub fn load_sprite_sheet_system(
+    loader: &Loader, 
+    texture_storage: &AssetStorage<Texture>, 
+    sprite_sheet_store: &AssetStorage<SpriteSheet>,
+    png_path: &str, 
+    ron_path: &str,
+) -> SpriteSheetHandle {
+    let texture_handle = {
+        loader.load(png_path, ImageFormat::default(), (), texture_storage)
+    };
+
+    loader.load(ron_path, SpriteSheetFormat(texture_handle), (), sprite_sheet_store)
 }

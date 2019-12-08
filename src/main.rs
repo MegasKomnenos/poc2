@@ -1,6 +1,7 @@
 mod misc;
 mod state;
 mod system;
+mod component;
 
 use crate::misc::*;
 use crate::state::*;
@@ -34,7 +35,9 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(SystemCameraMovement::default(), "Camera Movement System", &[])
-        .with(SystemColorMap::default(), "Map Coloring System", &["Camera Movement System"])
+        .with(SystemColorMap::default(), "Map Coloring System", &[])
+        .with(SystemMovement::default(), "Character Movement System", &[])
+        .with(SystemSpawnChar::default(), "Character Spawning System", &[])
         .with_bundle(
             InputBundle::<StringBindings>::new()
                 .with_bindings_from_file(input_config_path)?,

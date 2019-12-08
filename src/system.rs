@@ -1,16 +1,141 @@
 use crate::misc::*;
+use crate::component::*;
 
 use amethyst::{
     core::{ math::{ Vector3, Vector2, Point3, }, Transform, },
-    ecs::{ Entities, System, ReadStorage, WriteStorage, Read, ReadExpect, Join },
-    input::{ InputHandler, StringBindings }, 
+    assets::{ Loader, AssetStorage, },
+    ecs::{ Entities, System, ReadStorage, WriteStorage, Read, ReadExpect, Join, ParJoin, },
+    input::{ InputHandler, StringBindings, VirtualKeyCode }, 
     renderer::{
+        Texture,
+        sprite::{ SpriteRender, SpriteSheet, },
         camera::{ ActiveCamera, Camera, },
     },
     window::ScreenDimensions,
     winit,
 };
-use amethyst_tiles::{ MapStorage, TileMap, Map, };
+use amethyst_tiles::{ MapStorage, TileMap, Map, Region, };
+use rayon::iter::ParallelIterator;
+
+#[derive(Default)]
+pub struct SystemSpawnChar;
+impl<'s> System<'s> for SystemSpawnChar {
+    type SystemData = (
+        Entities<'s>,
+        ReadExpect<'s, Loader>,
+        Read<'s, AssetStorage<Texture>>,
+        Read<'s, AssetStorage<SpriteSheet>>,
+        Read<'s, ActiveCamera>,
+        Read<'s, InputHandler<StringBindings>>,
+        ReadExpect<'s, ScreenDimensions>,
+        ReadStorage<'s, Camera>,
+        WriteStorage<'s, ComponentMovement>,
+        WriteStorage<'s, Transform>,
+        WriteStorage<'s, SpriteRender>,
+    );
+
+    fn run(&mut self, (
+        entities, loader, texture_storage, sprite_sheet_storage, active_camera, input, dimensions, cameras, 
+        mut movements, mut transforms, mut sprite_renders): Self::SystemData
+    ) {
+        if input.key_is_down(VirtualKeyCode::G) {
+            if let Some(mouse_position) = input.mouse_position() {
+                let mut camera_join = (&cameras, &transforms).join();
+                if let Some((camera, camera_transform)) = active_camera
+                    .entity
+                    .and_then(|a| camera_join.get(a, &entities))
+                    .or_else(|| camera_join.next())
+                {
+                    let coord = camera.projection()
+                        .screen_to_world_point(
+                            Point3::new(mouse_position.0, mouse_position.1, 0.0),
+                            Vector2::new(dimensions.width(), dimensions.height()),
+                            camera_transform,
+                        );
+
+                    entities
+                        .build_entity()
+                        .with(
+                            SpriteRender { 
+                                sprite_sheet: load_sprite_sheet_system(
+                                    &loader, &texture_storage, &sprite_sheet_storage, 
+                                    "texture/tile_sprites.png", "texture/tile_sprites.ron"
+                                ), 
+                                sprite_number: 3,
+                            },
+                            &mut sprite_renders,
+                        )
+                        .with(
+                            Transform::from(Vector3::new(coord[0], coord[1], 0.0)),
+                            &mut transforms,
+                        )
+                        .with(
+                            ComponentMovement { 
+                                targets: vec![Point3::new(49, 49, 0)], 
+                                velocity: Vector3::new(0.0, 0.0, 0.0),
+                                speed_limit: 1.0, 
+                                acceleration: 0.1, 
+                            },
+                            &mut movements,
+                        )
+                        .build();
+                }
+            }
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct SystemMovement;
+impl<'s> System<'s> for SystemMovement {
+    type SystemData = (
+        Entities<'s>,
+        WriteStorage<'s, ComponentMovement>,
+        WriteStorage<'s, Transform>,
+        WriteStorage<'s, TileMap<MiscTile>>,
+    );
+
+    fn run(&mut self, (entities, mut movements, mut transforms, mut tilemaps): Self::SystemData) {
+        (&mut tilemaps).par_join().for_each(|tilemap| {
+            let region = Region::new(Point3::new(0, 0, 0), Point3::new(tilemap.dimensions()[0] - 1, tilemap.dimensions()[1] - 1, tilemap.dimensions()[2] - 1));
+
+            region.iter().for_each(|coord| {
+                tilemap.get_mut(&coord).unwrap().chars.clear();
+            });
+        });
+
+        for (entity, movement, transform) in (&entities, &mut movements, &mut transforms).join() {
+            if let Some(target) = movement.targets.first() {
+                for tilemap in (&mut tilemaps).join() {
+                    if let Some(_) = tilemap.to_tile(transform.translation()) {
+                        let mut velocity = tilemap.to_world(target) - transform.translation();
+                        let mut speed = (velocity[0].powf(2.0) + velocity[1].powf(2.0) + velocity[2].powf(2.0)).sqrt();
+                        let mut t = speed / 5.0;
+
+                        if t > 1.0 {
+                            t = 1.0;
+                        }
+
+                        if speed > movement.acceleration {
+                            velocity *= movement.acceleration / speed;
+                        }
+
+                        movement.velocity += velocity;
+                        speed = (movement.velocity[0].powf(2.0) + movement.velocity[1].powf(2.0) + movement.velocity[2].powf(2.0)).sqrt();
+
+                        if speed > movement.speed_limit * t {
+                            movement.velocity *= movement.speed_limit * t / speed;
+                        }
+
+                        *transform.translation_mut() += movement.velocity;
+
+                        tilemap.get_mut(&tilemap.to_tile(transform.translation()).unwrap()).unwrap().chars.push(entity.clone());
+                    }
+                }
+            }
+        };
+    }
+}
 
 #[derive(Default)]
 pub struct SystemColorMap;
