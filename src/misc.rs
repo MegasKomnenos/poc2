@@ -9,7 +9,6 @@ use amethyst::{
     },
 };
 use amethyst_tiles::Tile;
-use voronoi::Point;
 
 #[derive(Default, Clone)]
 pub struct MiscTile {
@@ -51,24 +50,4 @@ pub fn load_sprite_sheet_system(
     };
 
     loader.load(ron_path, SpriteSheetFormat(texture_handle), (), sprite_sheet_store)
-}
-
-pub fn segment_intersection(seg1: &[Point; 2], seg2: &[Point; 2]) -> Option<Point> {
-    let a = seg1[0];
-    let c = seg2[0];
-    let r = seg1[1] - a;
-    let s = seg2[1] - c;
-
-    let denom = r.cross(s);
-    if denom == 0.0 { return None; }
-
-    let numer_a = (c - a).cross(s);
-    let numer_c = (c - a).cross(r);
-
-    let t = numer_a / denom;
-    let u = numer_c / denom;
-
-    if t < 0.0 || t > 1.0 || u < 0.0 || u > 1.0 { return None; }
-
-    return Some(a + r * t);
 }

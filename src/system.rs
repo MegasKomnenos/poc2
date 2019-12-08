@@ -16,7 +16,6 @@ use amethyst::{
 };
 use amethyst_tiles::{ MapStorage, TileMap, Map, Region, };
 use rayon::iter::ParallelIterator;
-use voronoi::Point;
 
 #[derive(Default)]
 pub struct SystemSpawnChar;
@@ -141,47 +140,6 @@ impl<'s> System<'s> for SystemMovement {
                         if distance == 0.0 {
                             movement.targets.pop();
                         }
-
-                        tilemap.get_mut(&tilemap.to_tile(transform.translation()).unwrap()).unwrap().chars.push(entity.clone());
-                    }
-                }
-            }
-        }
-
-        for (entity, movement, mut transform) in (&entities, &mut movements, &mut transforms.restrict_mut()).join() {
-            for tilemap in (&mut tilemaps).join() {
-                if let Some(coord) = tilemap.to_tile(transform.get_unchecked().translation()) {
-                    if tilemap.get(&coord).unwrap().terrain == 1 {
-                        let transform = transform.get_mut_unchecked();
-                        let coord_prev = transform.translation() - movement.velocity;
-
-                        let line = [
-                            Point::new(coord_prev[0] as f64, coord_prev[1] as f64), 
-                            Point::new(transform.translation()[0] as f64, transform.translation()[1] as f64)
-                        ];
-
-                        let points = tilemap.to_world(&coord);
-
-                        let p0 = Point::new((points[0] - 0.5) as f64, (points[1] - 0.5) as f64);
-                        let p1 = Point::new((points[0] + 0.5) as f64, (points[1] - 0.5) as f64);
-                        let p2 = Point::new((points[0] + 0.5) as f64, (points[1] + 0.5) as f64);
-                        let p3 = Point::new((points[0] - 0.5) as f64, (points[1] + 0.5) as f64);
-
-                        let point: Point;
-
-                        if let Some(p) = segment_intersection(&line, &[p0, p1]) {
-                            point = p;
-                        } else if let Some(p) = segment_intersection(&line, &[p1, p2]) {
-                            point = p;
-                        } else if let Some(p) = segment_intersection(&line, &[p2, p3]) {
-                            point = p;
-                        } else if let Some(p) = segment_intersection(&line, &[p3, p0]) {
-                            point = p;
-                        } else {
-                            panic!("Segment Intersection Error");
-                        }
-
-                        *transform.translation_mut() = Vector3::new(point.x.into_inner() as f32, point.y.into_inner() as f32, 0.0);
 
                         tilemap.get_mut(&tilemap.to_tile(transform.translation()).unwrap()).unwrap().chars.push(entity.clone());
                     }
