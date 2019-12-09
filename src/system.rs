@@ -16,6 +16,138 @@ use amethyst::{
 };
 use amethyst_tiles::{ MapStorage, TileMap, Map, Region, };
 use rayon::iter::ParallelIterator;
+use pathfinding::prelude::{ astar, absdiff };
+
+#[derive(Default)]
+pub struct SystemSetMoveGoal;
+impl<'s> System<'s> for SystemSetMoveGoal {
+    type SystemData = (
+        Entities<'s>,
+        Read<'s, ActiveCamera>,
+        Read<'s, InputHandler<StringBindings>>,
+        ReadExpect<'s, ScreenDimensions>,
+        ReadStorage<'s, Camera>,
+        ReadStorage<'s, Transform>,
+        ReadStorage<'s, TileMap<MiscTile>>,
+        WriteStorage<'s, ComponentMovement>,
+    );
+
+    fn run(&mut self, (entities, active_camera, input, dimensions, cameras, transforms, tilemaps, mut movements): Self::SystemData) {
+        if input.key_is_down(VirtualKeyCode::T) {
+            if let Some(mouse_position) = input.mouse_position() {
+                let mut camera_join = (&cameras, &transforms).join();
+                if let Some((camera, camera_transform)) = active_camera
+                    .entity
+                    .and_then(|a| camera_join.get(a, &entities))
+                    .or_else(|| camera_join.next())
+                {
+                    let coord = camera.projection()
+                        .screen_to_world_point(
+                            Point3::new(mouse_position.0, mouse_position.1, 0.0),
+                            Vector2::new(dimensions.width(), dimensions.height()),
+                            camera_transform,
+                        );
+                    let coord = Vector3::new(coord[0], coord[1], coord[2]);
+                    
+                    for tilemap in (&tilemaps).join() {
+                        if let Some(goal) = tilemap.to_tile(&coord) {
+                            (&transforms, &mut movements).par_join().for_each(|(transform, movement)| {
+                                if let Some(start) = tilemap.to_tile(transform.translation()) {
+                                    let dimensions = tilemap.dimensions();
+
+                                    if let Some((targets, _)) = astar(
+                                        &start,
+                                        |&node| {
+                                            let mut out = Vec::new();
+                                            
+                                            if node[0] >= 1 {
+                                                let point = Point3::new(node[0] - 1, node[1], node[2]);
+
+                                                if tilemap.get(&point).unwrap().terrain == 0 {
+                                                    out.push((point, 1));
+                                                }
+                                            }
+                                            if node[0] + 1 < dimensions[0] {
+                                                let point = Point3::new(node[0] + 1, node[1], node[2]);
+
+                                                if tilemap.get(&point).unwrap().terrain == 0 {
+                                                    out.push((point, 1));
+                                                }
+                                            }
+                                            if node[1] >= 1 {
+                                                let point = Point3::new(node[0], node[1] - 1, node[2]);
+
+                                                if tilemap.get(&point).unwrap().terrain == 0 {
+                                                    out.push((point, 1));
+                                                }
+                                            }
+                                            if node[1] + 1 < dimensions[1] {
+                                                let point = Point3::new(node[0], node[1] + 1, node[2]);
+
+                                                if tilemap.get(&point).unwrap().terrain == 0 {
+                                                    out.push((point, 1));
+                                                }
+                                            }
+                                            if node[0] >= 1 && node[1] >= 1 {
+                                                let point = Point3::new(node[0] - 1, node[1] - 1, node[2]);
+
+                                                if tilemap.get(&point).unwrap().terrain == 0 {
+                                                    out.push((point, 1));
+                                                }
+                                            }
+                                            if node[0] + 1 < dimensions[0] && node[1] >= 1 {
+                                                let point = Point3::new(node[0] + 1, node[1] - 1, node[2]);
+
+                                                if tilemap.get(&point).unwrap().terrain == 0 {
+                                                    out.push((point, 1));
+                                                }
+                                            }
+                                            if node[0] + 1 < dimensions[0] && node[1] + 1 < dimensions[1] {
+                                                let point = Point3::new(node[0] + 1, node[1] + 1, node[2]);
+
+                                                if tilemap.get(&point).unwrap().terrain == 0 {
+                                                    out.push((point, 1));
+                                                }
+                                            }
+                                            if node[0] >= 1 && node[1] + 1 < dimensions[1] {
+                                                let point = Point3::new(node[0] - 1, node[1] + 1, node[2]);
+
+                                                if tilemap.get(&point).unwrap().terrain == 0 {
+                                                    out.push((point, 1));
+                                                }
+                                            }
+
+                                            out
+                                        },
+                                        |&node| absdiff(node[0], goal[0]) + absdiff(node[1], goal[1]),
+                                        |&node| node == goal) {
+                                        movement.targets.clear();
+                                        
+                                        for (i, target) in targets.iter().rev().enumerate() {
+                                            let i = targets.len() - i - 1;
+
+                                            if i == 0 || i + 1 == targets.len() {
+                                                movement.targets.push(*target);
+                                            } else {
+                                                let t0 = targets[i + 1];
+                                                let t1 = targets[i - 1];
+                                                let t2 = Point3::new(t0[0] + t1[0], t0[1] + t1[1], t0[2] + t1[2]);
+
+                                                if t2 != target * 2 {
+                                                    movement.targets.push(*target);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 #[derive(Default)]
 pub struct SystemSpawnChar;
@@ -71,9 +203,9 @@ impl<'s> System<'s> for SystemSpawnChar {
                         )
                         .with(
                             ComponentMovement { 
-                                targets: vec![Point3::new(10, 10, 0), Point3::new(10, 90, 0), Point3::new(90, 90, 0)], 
+                                targets: Vec::new(), 
                                 velocity: Vector3::new(0.0, 0.0, 0.0),
-                                speed_limit: 0.5, 
+                                speed_limit: 0.1, 
                                 acceleration: 0.05, 
                             },
                             &mut movements,
@@ -121,14 +253,8 @@ impl<'s> System<'s> for SystemMovement {
                         let speed = (movement.velocity[0].powf(2.0) + movement.velocity[1].powf(2.0) + movement.velocity[2].powf(2.0)).sqrt();
                         let mut speed_limit = movement.speed_limit;
 
-                        if distance < 10.0 {
-                            if movement.targets.len() > 0 {
-                                if distance < speed / 2.0 {
-                                    movement.targets.pop();
-                                }
-                            } else {
-                                speed_limit *= distance / 10.0;
-                            }
+                        if distance < 2.0 && movement.targets.len() <= 1 {
+                            speed_limit *= distance / 2.0;
                         }
 
                         if speed > speed_limit {
@@ -137,11 +263,20 @@ impl<'s> System<'s> for SystemMovement {
 
                         *transform.translation_mut() += movement.velocity;
 
-                        if distance == 0.0 {
+                        if (movement.targets.len() > 1 && distance < 0.2)
+                        || (movement.targets.len() <= 1 && distance == 0.0) {
                             movement.targets.pop();
                         }
 
                         tilemap.get_mut(&tilemap.to_tile(transform.translation()).unwrap()).unwrap().chars.push(entity.clone());
+                    }
+                }
+            } else {
+                let transform = transform.get_unchecked();
+
+                for tilemap in (&mut tilemaps).join() {
+                    if let Some(coord) = tilemap.to_tile(transform.translation()) {
+                        tilemap.get_mut(&coord).unwrap().chars.push(entity.clone());
                     }
                 }
             }
