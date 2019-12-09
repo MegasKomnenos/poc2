@@ -16,7 +16,6 @@ use amethyst::{
 };
 use amethyst_tiles::{ MapStorage, TileMap, Map, Region, };
 use rayon::iter::ParallelIterator;
-use pathfinding::prelude::{ astar, absdiff };
 
 #[derive(Default)]
 pub struct SystemSetMoveGoal;
@@ -53,76 +52,11 @@ impl<'s> System<'s> for SystemSetMoveGoal {
                         if let Some(goal) = tilemap.to_tile(&coord) {
                             (&transforms, &mut movements).par_join().for_each(|(transform, movement)| {
                                 if let Some(start) = tilemap.to_tile(transform.translation()) {
-                                    let dimensions = tilemap.dimensions();
+                                    let targets = get_targets(&start, &goal, &tilemap);
 
-                                    if let Some((targets, _)) = astar(
-                                        &start,
-                                        |&node| {
-                                            let mut out = Vec::new();
-                                            
-                                            if node[0] >= 1 {
-                                                let point = Point3::new(node[0] - 1, node[1], node[2]);
-
-                                                if tilemap.get(&point).unwrap().terrain == 0 {
-                                                    out.push((point, 1));
-                                                }
-                                            }
-                                            if node[0] + 1 < dimensions[0] {
-                                                let point = Point3::new(node[0] + 1, node[1], node[2]);
-
-                                                if tilemap.get(&point).unwrap().terrain == 0 {
-                                                    out.push((point, 1));
-                                                }
-                                            }
-                                            if node[1] >= 1 {
-                                                let point = Point3::new(node[0], node[1] - 1, node[2]);
-
-                                                if tilemap.get(&point).unwrap().terrain == 0 {
-                                                    out.push((point, 1));
-                                                }
-                                            }
-                                            if node[1] + 1 < dimensions[1] {
-                                                let point = Point3::new(node[0], node[1] + 1, node[2]);
-
-                                                if tilemap.get(&point).unwrap().terrain == 0 {
-                                                    out.push((point, 1));
-                                                }
-                                            }
-                                            if node[0] >= 1 && node[1] >= 1 {
-                                                let point = Point3::new(node[0] - 1, node[1] - 1, node[2]);
-
-                                                if tilemap.get(&point).unwrap().terrain == 0 {
-                                                    out.push((point, 1));
-                                                }
-                                            }
-                                            if node[0] + 1 < dimensions[0] && node[1] >= 1 {
-                                                let point = Point3::new(node[0] + 1, node[1] - 1, node[2]);
-
-                                                if tilemap.get(&point).unwrap().terrain == 0 {
-                                                    out.push((point, 1));
-                                                }
-                                            }
-                                            if node[0] + 1 < dimensions[0] && node[1] + 1 < dimensions[1] {
-                                                let point = Point3::new(node[0] + 1, node[1] + 1, node[2]);
-
-                                                if tilemap.get(&point).unwrap().terrain == 0 {
-                                                    out.push((point, 1));
-                                                }
-                                            }
-                                            if node[0] >= 1 && node[1] + 1 < dimensions[1] {
-                                                let point = Point3::new(node[0] - 1, node[1] + 1, node[2]);
-
-                                                if tilemap.get(&point).unwrap().terrain == 0 {
-                                                    out.push((point, 1));
-                                                }
-                                            }
-
-                                            out
-                                        },
-                                        |&node| absdiff(node[0], goal[0]) + absdiff(node[1], goal[1]),
-                                        |&node| node == goal) {
+                                    if targets.len() >= 1 {
                                         movement.targets.clear();
-                                        
+
                                         for (i, target) in targets.iter().rev().enumerate() {
                                             let i = targets.len() - i - 1;
 
