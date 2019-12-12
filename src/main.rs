@@ -2,10 +2,16 @@ mod misc;
 mod state;
 mod system;
 mod component;
+mod asset;
+mod ai;
 
 use crate::misc::*;
 use crate::state::*;
 use crate::system::*;
+
+extern crate ron;
+extern crate enum_primitive_derive;
+extern crate num_traits;
 
 use amethyst::{
     core::transform::TransformBundle,

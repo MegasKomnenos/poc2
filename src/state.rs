@@ -1,4 +1,5 @@
 use crate::misc::*;
+use crate::asset::*;
 
 use amethyst::{
     prelude::*,
@@ -7,8 +8,12 @@ use amethyst::{
     renderer::camera::Camera,
     window::ScreenDimensions,
     winit,
+    utils::application_root_dir,
 };
 use amethyst_tiles::{ TileMap, MortonEncoder2D, };
+
+use ron::de::from_str;
+use std::fs::read_to_string;
 
 #[derive(Default)]
 pub struct PocLoad;
@@ -40,6 +45,17 @@ impl SimpleState for PocLoad {
             .with(Transform::from(Vector3::new(0.0, 0.0, 0.1)))
             .with(Camera::standard_2d(width, height))
             .build();
+        
+        let path = application_root_dir().unwrap().join("asset");
+        
+        let mut extractables = Vec::new();
+        let mut items = Vec::new();
+
+        extractables.push(from_str::<AssetExtractableData>(&read_to_string(path.join("def").join("extractable").join("Amethyst_Vein.ron")).unwrap()).unwrap());
+        items.push(from_str::<AssetItemData>(&read_to_string(path.join("def").join("item").join("Amethyst.ron")).unwrap()).unwrap());
+
+        data.world.insert(extractables);
+        data.world.insert(items);
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {

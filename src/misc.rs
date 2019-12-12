@@ -1,6 +1,6 @@
 use amethyst::{
     core::{ math::{ Point3, Vector2, Vector3 }, Transform, },
-    ecs::{ World, WorldExt, Join, SystemData, Entity, Entities, Read, ReadExpect, ReadStorage, },
+    ecs::{ World, WorldExt, Join, SystemData, Entities, Read, ReadExpect, ReadStorage, },
     assets::{ Loader, AssetStorage, },
     renderer::{
         formats::texture::ImageFormat,
@@ -16,7 +16,6 @@ use pathfinding::prelude::{ astar, absdiff };
 #[derive(Default, Clone)]
 pub struct MiscTile {
     pub terrain: usize,
-    pub chars: Vec<Entity>,
 }
 impl Tile for MiscTile {
     fn sprite(&self, _: Point3<u32>, _: &World) -> Option<usize> {
@@ -129,6 +128,8 @@ pub fn load_sprite_sheet_system(
 pub fn get_targets(start: &Point3<u32>, goal: &Point3<u32>, tilemap: &TileMap<MiscTile, MortonEncoder2D>) -> Vec<Point3<u32>> {
     let dimensions = tilemap.dimensions();
 
+    let mut out = Vec::new();
+
     if let Some((targets, _)) = astar(
         start,
         |&node| {
@@ -196,8 +197,22 @@ pub fn get_targets(start: &Point3<u32>, goal: &Point3<u32>, tilemap: &TileMap<Mi
         |&node| absdiff(node[0], goal[0]) + absdiff(node[1], goal[1]),
         |&node| node == *goal
     ) {
-        targets
-    } else {
-        Vec::new()
+        for (i, target) in targets.iter().rev().enumerate() {
+            let i = targets.len() - i - 1;
+
+            if i == 0 || i + 1 == targets.len() {
+                out.push(*target);
+            } else {
+                let t0 = targets[i + 1];
+                let t1 = targets[i - 1];
+                let t2 = Point3::new(t0[0] + t1[0], t0[1] + t1[1], t0[2] + t1[2]);
+
+                if t2 != target * 2 {
+                    out.push(*target);
+                }
+            }
+        }
     }
+
+    out
 }

@@ -14,7 +14,7 @@ use amethyst::{
     window::ScreenDimensions,
     winit,
 };
-use amethyst_tiles::{ MapStorage, TileMap, Map, Region, };
+use amethyst_tiles::{ MapStorage, TileMap, Map, };
 use rayon::iter::ParallelIterator;
 
 #[derive(Default)]
@@ -155,22 +155,13 @@ impl<'s> System<'s> for SystemSpawnChar {
 pub struct SystemMovement;
 impl<'s> System<'s> for SystemMovement {
     type SystemData = (
-        Entities<'s>,
         WriteStorage<'s, ComponentMovement>,
         WriteStorage<'s, Transform>,
         WriteStorage<'s, TileMap<MiscTile>>,
     );
 
-    fn run(&mut self, (entities, mut movements, mut transforms, mut tilemaps): Self::SystemData) {
-        (&mut tilemaps).par_join().for_each(|tilemap| {
-            let region = Region::new(Point3::new(0, 0, 0), Point3::new(tilemap.dimensions()[0] - 1, tilemap.dimensions()[1] - 1, tilemap.dimensions()[2] - 1));
-
-            region.iter().for_each(|coord| {
-                tilemap.get_mut(&coord).unwrap().chars.clear();
-            });
-        });
-
-        for (entity, movement, mut transform) in (&entities, &mut movements, &mut transforms.restrict_mut()).join() {
+    fn run(&mut self, (mut movements, mut transforms, mut tilemaps): Self::SystemData) {
+        for (movement, mut transform) in (&mut movements, &mut transforms.restrict_mut()).join() {
             if movement.targets.len() > 0 {
                 let transform = transform.get_mut_unchecked();
 
@@ -201,16 +192,6 @@ impl<'s> System<'s> for SystemMovement {
                         || (movement.targets.len() <= 1 && distance == 0.0) {
                             movement.targets.pop();
                         }
-
-                        tilemap.get_mut(&tilemap.to_tile(transform.translation()).unwrap()).unwrap().chars.push(entity.clone());
-                    }
-                }
-            } else {
-                let transform = transform.get_unchecked();
-
-                for tilemap in (&mut tilemaps).join() {
-                    if let Some(coord) = tilemap.to_tile(transform.translation()) {
-                        tilemap.get_mut(&coord).unwrap().chars.push(entity.clone());
                     }
                 }
             }

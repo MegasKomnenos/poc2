@@ -1,0 +1,8 @@
+#![enable(implicit_some)]
+(
+    name: "Amethyst Vein",
+    outs: [
+        1,
+    ],
+    duration: 60,
+)
