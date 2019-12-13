@@ -15,6 +15,7 @@ use amethyst_tiles::{ TileMap, MortonEncoder2D, };
 
 use ron::de::from_str;
 use std::fs::read_to_string;
+use std::collections::HashMap;
 
 #[derive(Default)]
 pub struct PocLoad;
@@ -64,8 +65,19 @@ impl SimpleState for PocLoad {
         data.world.insert(items);
 
         let mut axis: Vec<AIAxis> = Vec::new();
+        let mut actions: Vec<Box<dyn AIAction + Send + Sync>> = Vec::new();
+
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OreEmpty.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotEmpty.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsEmpty.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("DistanceFromMe.ron")).unwrap()).unwrap());
+
+        actions.push(Box::new(AIActionWorkAtMine { name: "Work at Mine".to_string(), axis: vec![0, 3], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionWorkAtFurnace { name: "Work at Furnace".to_string(), axis: vec![1, 3], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionWorkAtSmithy { name: "Work at Smithy".to_string(), axis: vec![2, 3], delays: HashMap::new() }));
 
         data.world.insert(axis);
+        data.world.insert(actions);
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
