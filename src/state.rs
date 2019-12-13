@@ -1,5 +1,6 @@
 use crate::misc::*;
 use crate::asset::*;
+use crate::ai::*;
 
 use amethyst::{
     prelude::*,
@@ -48,14 +49,23 @@ impl SimpleState for PocLoad {
         
         let path = application_root_dir().unwrap().join("asset");
         
-        let mut extractables = Vec::new();
+        let mut workplaces = Vec::new();
         let mut items = Vec::new();
 
-        extractables.push(from_str::<AssetExtractableData>(&read_to_string(path.join("def").join("extractable").join("Amethyst_Vein.ron")).unwrap()).unwrap());
-        items.push(from_str::<AssetItemData>(&read_to_string(path.join("def").join("item").join("Amethyst.ron")).unwrap()).unwrap());
+        workplaces.push(from_str::<AssetWorkplaceData>(&read_to_string(path.join("def").join("workplace").join("Mine.ron")).unwrap()).unwrap());
+        workplaces.push(from_str::<AssetWorkplaceData>(&read_to_string(path.join("def").join("workplace").join("Furnace.ron")).unwrap()).unwrap());
+        workplaces.push(from_str::<AssetWorkplaceData>(&read_to_string(path.join("def").join("workplace").join("Smithy.ron")).unwrap()).unwrap());
 
-        data.world.insert(extractables);
+        items.push(from_str::<AssetItemData>(&read_to_string(path.join("def").join("item").join("Ore.ron")).unwrap()).unwrap());
+        items.push(from_str::<AssetItemData>(&read_to_string(path.join("def").join("item").join("Ingot.ron")).unwrap()).unwrap());
+        items.push(from_str::<AssetItemData>(&read_to_string(path.join("def").join("item").join("Tools.ron")).unwrap()).unwrap());
+
+        data.world.insert(workplaces);
         data.world.insert(items);
+
+        let mut axis: Vec<AIAxis> = Vec::new();
+
+        data.world.insert(axis);
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {

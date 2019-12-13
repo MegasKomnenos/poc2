@@ -1,0 +1,15 @@
+#![enable(implicit_some)]
+(
+    name: "Mine",
+    inputs: [
+        0,
+        1,
+        0,
+    ],
+    outs: [
+        0,
+        0,
+        1,
+    ],
+    duration: 60,
+)

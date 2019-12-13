@@ -1,47 +1,29 @@
 use crate::misc::*;
-use crate::ai::AIWSKey;
 
 use amethyst::{
     core::math::{ Point3, Vector3 },
     ecs::{Component, DenseVecStorage, },
 };
 
-use std::collections::HashMap;
-use std::any::Any;
-
-pub struct ComponentExtractable {
+pub struct ComponentWorkplace {
     pub variant: u8,
-    pub deposit: u16,
 }
-impl Component for ComponentExtractable {
+impl Component for ComponentWorkplace {
     type Storage = DenseVecStorage<Self>;
 }
 
 pub struct ComponentStockpile {
-    pub items: [u16; 1],
-    pub size: u32,
-    pub size_limit: u32,
+    pub items: [u16; 3],
 }
 impl Component for ComponentStockpile {
     type Storage = DenseVecStorage<Self>;
 }
 
 pub struct ComponentAgent {
-    pub goals: [u8; 8],
-    pub actions: [u8; 24],
-    pub plan: [u8; 31],
-    pub plan_length: u8,
+    pub actions: [u8; 31],
+    pub current: u8,
 }
 impl Component for ComponentAgent {
-    type Storage = DenseVecStorage<Self>;
-}
-
-pub struct ComponentMemory {
-    pub ws: HashMap<AIWSKey, Box<dyn Any>>,
-}
-unsafe impl Send for ComponentMemory {}
-unsafe impl Sync for ComponentMemory {}
-impl Component for ComponentMemory {
     type Storage = DenseVecStorage<Self>;
 }
 
