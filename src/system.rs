@@ -6,7 +6,7 @@ use crate::asset::*;
 use amethyst::{
     core::{ math::{ Vector3, Vector2, Point3, }, Transform, },
     assets::{ Loader, AssetStorage, },
-    ecs::{ Entity, Entities, System, ReadStorage, WriteStorage, Read, ReadExpect, Join, ParJoin, },
+    ecs::{ Entity, Entities, System, ReadStorage, WriteStorage, Read, ReadExpect, Write, Join, ParJoin, },
     input::{ InputHandler, StringBindings, VirtualKeyCode }, 
     renderer::{
         Texture,
@@ -18,16 +18,19 @@ use amethyst::{
 };
 use amethyst_tiles::{ MapStorage, TileMap, Map, };
 use rayon::iter::ParallelIterator;
+use rand::prelude::*;
+use rand::distributions::WeightedIndex;
+use std::collections::HashSet;
 
 #[derive(Default)]
 pub struct SystemAI;
 impl<'s> System<'s> for SystemAI {
     type SystemData = (
         Entities<'s>,
-        Read<'s, Vec<Box<dyn AIAction + Send + Sync>>>,
         Read<'s, Vec<AssetWorkplaceData>>,
         Read<'s, Vec<AssetItemData>>,
         Read<'s, Vec<AIAxis>>,
+        Write<'s, Vec<Box<dyn AIAction + Send + Sync>>>,
         WriteStorage<'s, ComponentAgent>,
         WriteStorage<'s, TileMap<MiscTile>>,
         WriteStorage<'s, Transform>,
@@ -36,22 +39,53 @@ impl<'s> System<'s> for SystemAI {
         WriteStorage<'s, ComponentMovement>,
     );
 
-    fn run(&mut self, (entities, action_datas, workplace_datas, item_datas, axis_datas, mut agents, mut tilemaps, mut transforms, mut workplaces, mut stockpiles, mut movements): Self::SystemData ) {
-        let ai_data = (&entities, workplace_datas, item_datas, axis_datas, tilemaps, transforms, workplaces, stockpiles, movements);
+    fn run(&mut self, (entities, workplace_datas, item_datas, axis_datas, mut action_datas, mut agents, mut tilemaps, mut transforms, mut workplaces, mut stockpiles, mut movements): Self::SystemData ) {
+        let mut ai_data = (&entities, workplace_datas, item_datas, axis_datas, tilemaps, transforms, workplaces, stockpiles, movements);
 
         (&entities, &mut agents).par_join().for_each(|(entity, agent)| {
-            if !action_datas[agent.current as usize].get_delay().contains_key(&entity) {
+            if agent.current == 255 {
+                let mut evals: Vec<(u8, Option<Entity>, f32)> = Vec::new();
+
                 for action in agent.actions.iter() {
                     if *action == 255 {
                         continue;
                     }
 
-                    let lst = action_datas[*action as usize].eval(&entity, &ai_data);
-
-                    println!("{}", lst.unwrap().2);
+                    if let Some(eval) = action_datas[*action as usize].eval(&entity, &ai_data) {
+                        evals.push(eval);
+                    }
                 }
+
+                let dist = WeightedIndex::new(evals.iter().map(|eval| eval.2.powf(5.0))).unwrap();
+                let current = evals[dist.sample(&mut thread_rng())];
+
+                agent.current = current.0;
+
+                if let Some(t) = current.1 {
+                    agent.target = Some(t.clone());
+                } else {
+                    agent.target = None;
+                }
+
+                agent.fresh = true;
             }
         });
+
+        for (entity, agent) in (&entities, &mut agents).join() {
+            if agent.fresh {
+                agent.fresh = false;
+                
+                if !action_datas[agent.current as usize].init(&entity, &agent.target.unwrap_or(entity.clone()), &mut ai_data) {
+                    agent.current = 255;
+                }
+            }
+
+            if agent.current != 255 {
+                if action_datas[agent.current as usize].run(&entity, &agent.target.unwrap_or(entity.clone()), &mut ai_data) {
+                    agent.current = 255;
+                }
+            }
+        }
     }
 }
 
@@ -210,7 +244,7 @@ impl<'s> System<'s> for SystemSpawnChar {
                             camera_transform,
                         );
                     
-                    let mut actions = [255; 31];
+                    let mut actions = [255; 23];
 
                     actions[0] = 0;
                     actions[1] = 1;
@@ -244,7 +278,9 @@ impl<'s> System<'s> for SystemSpawnChar {
                         .with(
                             ComponentAgent {
                                 actions: actions,
-                                current: 0,
+                                current: 255,
+                                target: None,
+                                fresh: false,
                             },
                             &mut agents,
                         )
@@ -299,8 +335,14 @@ impl<'s> System<'s> for SystemMovement {
                         *transform.translation_mut() += movement.velocity;
 
                         if (movement.targets.len() > 1 && distance < 0.2)
-                        || (movement.targets.len() <= 1 && distance == 0.0) {
+                        || (movement.targets.len() <= 1 && distance < 0.002) {
                             movement.targets.pop();
+                        }
+
+                        if movement.targets.len() == 0 {
+                            movement.velocity[0] = 0.0;
+                            movement.velocity[1] = 0.0;
+                            movement.velocity[2] = 0.0;
                         }
                     }
                 }

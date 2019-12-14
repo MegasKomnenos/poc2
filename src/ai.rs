@@ -105,7 +105,7 @@ impl AIAction for AIActionWorkAtSmithy {
     fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
         let (entities, _, _, axis_datas, _, _, workplaces, _, _) = &ai_data;
 
-        let mut out = (0, None, -1.0);
+        let mut out = (2, None, -1.0);
 
         for (target, workplace) in (*entities, workplaces).join() {
             if workplace.variant == 2 {
@@ -207,7 +207,7 @@ impl AIAction for AIActionWorkAtFurnace {
     fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
         let (entities, _, _, axis_datas, _, _, workplaces, _, _) = &ai_data;
 
-        let mut out = (0, None, -1.0);
+        let mut out = (1, None, -1.0);
 
         for (target, workplace) in (*entities, workplaces).join() {
             if workplace.variant == 1 {
@@ -408,10 +408,10 @@ pub fn clearing_house(variant: &AIInputType, me: &Entity, target: &Entity, foo: 
             return clamp(stockpiles.get(*me).unwrap().items[0] as f32 / foo);
         }
         AIInputType::MyStockpileIngot => {
-            return clamp(stockpiles.get(*me).unwrap().items[0] as f32 / foo);
+            return clamp(stockpiles.get(*me).unwrap().items[1] as f32 / foo);
         }
         AIInputType::MyStockpileTools => {
-            return clamp(stockpiles.get(*me).unwrap().items[0] as f32 / foo);
+            return clamp(stockpiles.get(*me).unwrap().items[2] as f32 / foo);
         }
         AIInputType::DistanceFromMe => {
             let diff = transforms.get(*me).unwrap().translation() - transforms.get(*target).unwrap().translation();

@@ -9,6 +9,7 @@ use crate::misc::*;
 use crate::state::*;
 use crate::system::*;
 
+extern crate rand;
 extern crate ron;
 extern crate enum_primitive_derive;
 extern crate num_traits;

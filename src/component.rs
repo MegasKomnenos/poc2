@@ -2,7 +2,7 @@ use crate::misc::*;
 
 use amethyst::{
     core::math::{ Point3, Vector3 },
-    ecs::{Component, DenseVecStorage, },
+    ecs::{Component, DenseVecStorage, Entity },
 };
 
 pub struct ComponentWorkplace {
@@ -20,8 +20,10 @@ impl Component for ComponentStockpile {
 }
 
 pub struct ComponentAgent {
-    pub actions: [u8; 31],
+    pub actions: [u8; 23],
     pub current: u8,
+    pub target: Option<Entity>,
+    pub fresh: bool,
 }
 impl Component for ComponentAgent {
     type Storage = DenseVecStorage<Self>;
