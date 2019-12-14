@@ -20,7 +20,6 @@ use amethyst_tiles::{ MapStorage, TileMap, Map, };
 use rayon::iter::ParallelIterator;
 use rand::prelude::*;
 use rand::distributions::WeightedIndex;
-use std::collections::HashSet;
 
 #[derive(Default)]
 pub struct SystemAI;

@@ -57,7 +57,7 @@ pub struct AIAxis {
     pub c: f32,
 }
 
-pub trait AIAction {
+pub trait AIAction: Send + Sync {
     fn get_name(&self) -> &String;
     fn get_delay(&self) -> &HashMap<Entity, u32>;
 
@@ -67,40 +67,26 @@ pub trait AIAction {
     fn run(&mut self, _: &Entity, _: &Entity, _: &mut AIData) -> bool;
 }
 
-#[derive(Clone)]
 pub struct AIActionIdle {
     pub name: String,
     pub axis: Vec<u8>,
     pub delays: HashMap<Entity, u32>,
 }
-#[derive(Clone)]
 pub struct AIActionWorkAtSmithy {
     pub name: String,
     pub axis: Vec<u8>,
     pub delays: HashMap<Entity, u32>,
 }
-#[derive(Clone)]
 pub struct AIActionWorkAtFurnace {
     pub name: String,
     pub axis: Vec<u8>,
     pub delays: HashMap<Entity, u32>,
 }
-#[derive(Clone)]
 pub struct AIActionWorkAtMine {
     pub name: String,
     pub axis: Vec<u8>,
     pub delays: HashMap<Entity, u32>,
 }
-
-unsafe impl Send for AIActionIdle {}
-unsafe impl Send for AIActionWorkAtSmithy {}
-unsafe impl Send for AIActionWorkAtFurnace {}
-unsafe impl Send for AIActionWorkAtMine {}
-
-unsafe impl Sync for AIActionIdle {}
-unsafe impl Sync for AIActionWorkAtSmithy {}
-unsafe impl Sync for AIActionWorkAtFurnace {}
-unsafe impl Sync for AIActionWorkAtMine {}
 
 impl AIAction for AIActionIdle {
     fn get_name(&self) -> &String {
@@ -133,7 +119,7 @@ impl AIAction for AIActionWorkAtSmithy {
     fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
         let (entities, _, _, axis_datas, _, _, workplaces, _, _) = &ai_data;
 
-        let mut out = (2, None, -1.0);
+        let mut out = (2, None, 0.0);
 
         for (target, workplace) in (*entities, workplaces).join() {
             if workplace.variant == 2 {
@@ -157,7 +143,7 @@ impl AIAction for AIActionWorkAtSmithy {
 
         println!("{}: {}", self.name, out.2);
 
-        if out.2 > -1.0 {
+        if out.2 > 0.0 {
             return Some(out);
         } else {
             return None;
@@ -237,7 +223,7 @@ impl AIAction for AIActionWorkAtFurnace {
     fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
         let (entities, _, _, axis_datas, _, _, workplaces, _, _) = &ai_data;
 
-        let mut out = (1, None, -1.0);
+        let mut out = (1, None, 0.0);
 
         for (target, workplace) in (*entities, workplaces).join() {
             if workplace.variant == 1 {
@@ -261,7 +247,7 @@ impl AIAction for AIActionWorkAtFurnace {
 
         println!("{}: {}", self.name, out.2);
 
-        if out.2 > -1.0 {
+        if out.2 > 0.0 {
             return Some(out);
         } else {
             return None;
@@ -341,7 +327,7 @@ impl AIAction for AIActionWorkAtMine {
     fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
         let (entities, _, _, axis_datas, _, _, workplaces, _, _) = ai_data;
 
-        let mut out = (0, None, -1.0);
+        let mut out = (0, None, 0.0);
 
         for (target, workplace) in (*entities, workplaces).join() {
             if workplace.variant == 0 {
@@ -365,7 +351,7 @@ impl AIAction for AIActionWorkAtMine {
 
         println!("{}: {}", self.name, out.2);
 
-        if out.2 > -1.0 {
+        if out.2 > 0.0 {
             return Some(out);
         } else {
             return None;
