@@ -29,7 +29,7 @@ impl<'s> System<'s> for SystemAI {
         Read<'s, Vec<AssetWorkplaceData>>,
         Read<'s, Vec<AssetItemData>>,
         Read<'s, Vec<AIAxis>>,
-        Write<'s, Vec<Box<dyn AIAction + Send + Sync>>>,
+        Write<'s, Vec<Box<dyn AIAction>>>,
         WriteStorage<'s, ComponentAgent>,
         WriteStorage<'s, TileMap<MiscTile>>,
         WriteStorage<'s, Transform>,

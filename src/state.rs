@@ -65,7 +65,7 @@ impl SimpleState for PocLoad {
         data.world.insert(items);
 
         let mut axis: Vec<AIAxis> = Vec::new();
-        let mut actions: Vec<Box<dyn AIAction + Send + Sync>> = Vec::new();
+        let mut actions: Vec<Box<dyn AIAction>> = Vec::new();
 
         axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("DistanceFromMe.ron")).unwrap()).unwrap());
         axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OreEmpty.ron")).unwrap()).unwrap());
