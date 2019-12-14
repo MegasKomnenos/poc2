@@ -56,8 +56,15 @@ impl<'s> System<'s> for SystemAI {
                     }
                 }
 
-                let dist = WeightedIndex::new(evals.iter().map(|eval| eval.2.powf(5.0))).unwrap();
-                let current = evals[dist.sample(&mut thread_rng())];
+                let current: (u8, Option<Entity>, f32);
+
+                if evals.len() > 1 {
+                    let dist = WeightedIndex::new(evals.iter().map(|eval| eval.2.powf(5.0))).unwrap();
+
+                    current = evals[dist.sample(&mut thread_rng())];
+                } else {
+                    current = evals[0];
+                }
 
                 agent.current = current.0;
 
@@ -249,6 +256,7 @@ impl<'s> System<'s> for SystemSpawnChar {
                     actions[0] = 0;
                     actions[1] = 1;
                     actions[2] = 2;
+                    actions[3] = 3;
 
                     entities
                         .build_entity()

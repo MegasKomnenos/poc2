@@ -68,6 +68,12 @@ pub trait AIAction {
 }
 
 #[derive(Clone)]
+pub struct AIActionIdle {
+    pub name: String,
+    pub axis: Vec<u8>,
+    pub delays: HashMap<Entity, u32>,
+}
+#[derive(Clone)]
 pub struct AIActionWorkAtSmithy {
     pub name: String,
     pub axis: Vec<u8>,
@@ -86,13 +92,35 @@ pub struct AIActionWorkAtMine {
     pub delays: HashMap<Entity, u32>,
 }
 
+unsafe impl Send for AIActionIdle {}
 unsafe impl Send for AIActionWorkAtSmithy {}
 unsafe impl Send for AIActionWorkAtFurnace {}
 unsafe impl Send for AIActionWorkAtMine {}
 
+unsafe impl Sync for AIActionIdle {}
 unsafe impl Sync for AIActionWorkAtSmithy {}
 unsafe impl Sync for AIActionWorkAtFurnace {}
 unsafe impl Sync for AIActionWorkAtMine {}
+
+impl AIAction for AIActionIdle {
+    fn get_name(&self) -> &String {
+        &self.name
+    }
+    fn get_delay(&self) -> &HashMap<Entity, u32> {
+        &self.delays
+    }
+
+    fn eval(&self, _: &Entity, _: &AIData) -> Option<(u8, Option<Entity>, f32)> {
+        return Some((3, None, 0.0));
+    }
+
+    fn init(&mut self, _: &Entity, _: &Entity, _: &mut AIData) -> bool {
+        return true;
+    }
+    fn run(&mut self, _: &Entity, _: &Entity, _: &mut AIData) -> bool {
+        return true;
+    }
+}
 
 impl AIAction for AIActionWorkAtSmithy {
     fn get_name(&self) -> &String {

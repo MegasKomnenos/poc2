@@ -77,6 +77,7 @@ impl SimpleState for PocLoad {
         actions.push(Box::new(AIActionWorkAtMine { name: "Work at Mine".to_string(), axis: vec![0, 1], delays: HashMap::new() }));
         actions.push(Box::new(AIActionWorkAtFurnace { name: "Work at Furnace".to_string(), axis: vec![0, 2, 4], delays: HashMap::new() }));
         actions.push(Box::new(AIActionWorkAtSmithy { name: "Work at Smithy".to_string(), axis: vec![0, 3, 5], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionIdle { name: "Idle".to_string(), axis: Vec::new(), delays: HashMap::new() }));
 
         data.world.insert(axis);
         data.world.insert(actions);
