@@ -1,6 +1,6 @@
 #![enable(implicit_some)]
 (
-    name: "Mine",
+    name: "Furnace",
     inputs: [
         1,
         0,

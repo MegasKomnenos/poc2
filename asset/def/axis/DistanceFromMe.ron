@@ -4,7 +4,7 @@
     curve: Logistic,
     input: DistanceFromMe,
     foo: 50.0,
-    m: 8.0,
+    m: -8.0,
     k: 1.0,
     b: 0.0,
     c: 0.5,

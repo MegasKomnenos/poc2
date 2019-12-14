@@ -67,14 +67,16 @@ impl SimpleState for PocLoad {
         let mut axis: Vec<AIAxis> = Vec::new();
         let mut actions: Vec<Box<dyn AIAction + Send + Sync>> = Vec::new();
 
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("DistanceFromMe.ron")).unwrap()).unwrap());
         axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OreEmpty.ron")).unwrap()).unwrap());
         axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotEmpty.ron")).unwrap()).unwrap());
         axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsEmpty.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("DistanceFromMe.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OreFull.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotFull.ron")).unwrap()).unwrap());
 
-        actions.push(Box::new(AIActionWorkAtMine { name: "Work at Mine".to_string(), axis: vec![0, 3], delays: HashMap::new() }));
-        actions.push(Box::new(AIActionWorkAtFurnace { name: "Work at Furnace".to_string(), axis: vec![1, 3], delays: HashMap::new() }));
-        actions.push(Box::new(AIActionWorkAtSmithy { name: "Work at Smithy".to_string(), axis: vec![2, 3], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionWorkAtMine { name: "Work at Mine".to_string(), axis: vec![0, 1], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionWorkAtFurnace { name: "Work at Furnace".to_string(), axis: vec![0, 2, 4], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionWorkAtSmithy { name: "Work at Smithy".to_string(), axis: vec![0, 3, 5], delays: HashMap::new() }));
 
         data.world.insert(axis);
         data.world.insert(actions);

@@ -3,8 +3,8 @@ use serde::{ Serialize, Deserialize, };
 #[derive(Serialize, Deserialize)]
 pub struct AssetWorkplaceData {
     pub name: String,
-    pub inputs: [u8; 3],
-    pub outs: [u8; 3],
+    pub inputs: Vec<u8>,
+    pub outs: Vec<u8>,
     pub duration: u32,
 }
 

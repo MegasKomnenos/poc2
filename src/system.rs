@@ -1,10 +1,12 @@
 use crate::misc::*;
 use crate::component::*;
+use crate::ai::*;
+use crate::asset::*;
 
 use amethyst::{
     core::{ math::{ Vector3, Vector2, Point3, }, Transform, },
     assets::{ Loader, AssetStorage, },
-    ecs::{ Entities, System, ReadStorage, WriteStorage, Read, ReadExpect, Join, ParJoin, },
+    ecs::{ Entity, Entities, System, ReadStorage, WriteStorage, Read, ReadExpect, Join, ParJoin, },
     input::{ InputHandler, StringBindings, VirtualKeyCode }, 
     renderer::{
         Texture,
@@ -18,21 +20,61 @@ use amethyst_tiles::{ MapStorage, TileMap, Map, };
 use rayon::iter::ParallelIterator;
 
 #[derive(Default)]
-pub struct SystemSetMoveGoal;
-impl<'s> System<'s> for SystemSetMoveGoal {
+pub struct SystemAI;
+impl<'s> System<'s> for SystemAI {
     type SystemData = (
         Entities<'s>,
+        Read<'s, Vec<Box<dyn AIAction + Send + Sync>>>,
+        Read<'s, Vec<AssetWorkplaceData>>,
+        Read<'s, Vec<AssetItemData>>,
+        Read<'s, Vec<AIAxis>>,
+        WriteStorage<'s, ComponentAgent>,
+        WriteStorage<'s, TileMap<MiscTile>>,
+        WriteStorage<'s, Transform>,
+        WriteStorage<'s, ComponentWorkplace>,
+        WriteStorage<'s, ComponentStockpile>,
+        WriteStorage<'s, ComponentMovement>,
+    );
+
+    fn run(&mut self, (entities, action_datas, workplace_datas, item_datas, axis_datas, mut agents, mut tilemaps, mut transforms, mut workplaces, mut stockpiles, mut movements): Self::SystemData ) {
+        let ai_data = (&entities, workplace_datas, item_datas, axis_datas, tilemaps, transforms, workplaces, stockpiles, movements);
+
+        (&entities, &mut agents).par_join().for_each(|(entity, agent)| {
+            if !action_datas[agent.current as usize].get_delay().contains_key(&entity) {
+                for action in agent.actions.iter() {
+                    if *action == 255 {
+                        continue;
+                    }
+
+                    let lst = action_datas[*action as usize].eval(&entity, &ai_data);
+
+                    println!("{}", lst.unwrap().2);
+                }
+            }
+        });
+    }
+}
+
+#[derive(Default)]
+pub struct SystemSetWorkplace;
+impl<'s> System<'s> for SystemSetWorkplace {
+    type SystemData = (
+        Entities<'s>,
+        ReadExpect<'s, Loader>,
+        Read<'s, AssetStorage<Texture>>,
+        Read<'s, AssetStorage<SpriteSheet>>,
         Read<'s, ActiveCamera>,
         Read<'s, InputHandler<StringBindings>>,
         ReadExpect<'s, ScreenDimensions>,
         ReadStorage<'s, Camera>,
-        ReadStorage<'s, Transform>,
         ReadStorage<'s, TileMap<MiscTile>>,
-        WriteStorage<'s, ComponentMovement>,
+        WriteStorage<'s, Transform>,
+        WriteStorage<'s, SpriteRender>,
+        WriteStorage<'s, ComponentWorkplace>,
     );
 
-    fn run(&mut self, (entities, active_camera, input, dimensions, cameras, transforms, tilemaps, mut movements): Self::SystemData) {
-        if input.key_is_down(VirtualKeyCode::T) {
+    fn run(&mut self, (entities, loader, texture_storage, sprite_sheet_storage, active_camera, input, dimensions, cameras, tilemaps, mut transforms, mut sprite_renders, mut workplaces): Self::SystemData) {
+        if input.key_is_down(VirtualKeyCode::F1) || input.key_is_down(VirtualKeyCode::F2) || input.key_is_down(VirtualKeyCode::F3) {
             if let Some(mouse_position) = input.mouse_position() {
                 let mut camera_join = (&cameras, &transforms).join();
                 if let Some((camera, camera_transform)) = active_camera
@@ -47,35 +89,82 @@ impl<'s> System<'s> for SystemSetMoveGoal {
                             camera_transform,
                         );
                     let coord = Vector3::new(coord[0], coord[1], coord[2]);
-                    
-                    for tilemap in (&tilemaps).join() {
-                        if let Some(goal) = tilemap.to_tile(&coord) {
-                            (&transforms, &mut movements).par_join().for_each(|(transform, movement)| {
-                                if let Some(start) = tilemap.to_tile(transform.translation()) {
-                                    let targets = get_targets(&start, &goal, &tilemap);
 
-                                    if targets.len() >= 1 {
-                                        movement.targets.clear();
+                    let tilemap = (&tilemaps).join().next().unwrap();
+                    let coord = tilemap.to_world(&tilemap.to_tile(&coord).unwrap());
 
-                                        for (i, target) in targets.iter().rev().enumerate() {
-                                            let i = targets.len() - i - 1;
-
-                                            if i == 0 || i + 1 == targets.len() {
-                                                movement.targets.push(*target);
-                                            } else {
-                                                let t0 = targets[i + 1];
-                                                let t1 = targets[i - 1];
-                                                let t2 = Point3::new(t0[0] + t1[0], t0[1] + t1[1], t0[2] + t1[2]);
-
-                                                if t2 != target * 2 {
-                                                    movement.targets.push(*target);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        }
+                    if input.key_is_down(VirtualKeyCode::F1) {
+                        entities
+                            .build_entity()
+                            .with(
+                                SpriteRender { 
+                                    sprite_sheet: load_sprite_sheet_system(
+                                        &loader, &texture_storage, &sprite_sheet_storage, 
+                                        "texture/tile_sprites.png", "texture/tile_sprites.ron"
+                                    ), 
+                                    sprite_number: 4,
+                                },
+                                &mut sprite_renders,
+                            )
+                            .with(
+                                Transform::from(Vector3::new(coord[0], coord[1], 0.0)),
+                                &mut transforms,
+                            )
+                            .with(
+                                ComponentWorkplace {
+                                    variant: 0,
+                                },
+                                &mut workplaces
+                            )
+                            .build();
+                    } else if input.key_is_down(VirtualKeyCode::F2) {
+                        entities
+                            .build_entity()
+                            .with(
+                                SpriteRender { 
+                                    sprite_sheet: load_sprite_sheet_system(
+                                        &loader, &texture_storage, &sprite_sheet_storage, 
+                                        "texture/tile_sprites.png", "texture/tile_sprites.ron"
+                                    ), 
+                                    sprite_number: 5,
+                                },
+                                &mut sprite_renders,
+                            )
+                            .with(
+                                Transform::from(Vector3::new(coord[0], coord[1], 0.0)),
+                                &mut transforms,
+                            )
+                            .with(
+                                ComponentWorkplace {
+                                    variant: 1,
+                                },
+                                &mut workplaces
+                            )
+                            .build();
+                    } else if input.key_is_down(VirtualKeyCode::F3) {
+                        entities
+                            .build_entity()
+                            .with(
+                                SpriteRender { 
+                                    sprite_sheet: load_sprite_sheet_system(
+                                        &loader, &texture_storage, &sprite_sheet_storage, 
+                                        "texture/tile_sprites.png", "texture/tile_sprites.ron"
+                                    ), 
+                                    sprite_number: 6,
+                                },
+                                &mut sprite_renders,
+                            )
+                            .with(
+                                Transform::from(Vector3::new(coord[0], coord[1], 0.0)),
+                                &mut transforms,
+                            )
+                            .with(
+                                ComponentWorkplace {
+                                    variant: 2,
+                                },
+                                &mut workplaces
+                            )
+                            .build();
                     }
                 }
             }
@@ -98,11 +187,13 @@ impl<'s> System<'s> for SystemSpawnChar {
         WriteStorage<'s, ComponentMovement>,
         WriteStorage<'s, Transform>,
         WriteStorage<'s, SpriteRender>,
+        WriteStorage<'s, ComponentAgent>,
+        WriteStorage<'s, ComponentStockpile>,
     );
 
     fn run(&mut self, (
         entities, loader, texture_storage, sprite_sheet_storage, active_camera, input, dimensions, cameras, 
-        mut movements, mut transforms, mut sprite_renders): Self::SystemData
+        mut movements, mut transforms, mut sprite_renders, mut agents, mut stockpiles): Self::SystemData
     ) {
         if input.key_is_down(VirtualKeyCode::G) {
             if let Some(mouse_position) = input.mouse_position() {
@@ -118,6 +209,12 @@ impl<'s> System<'s> for SystemSpawnChar {
                             Vector2::new(dimensions.width(), dimensions.height()),
                             camera_transform,
                         );
+                    
+                    let mut actions = [255; 31];
+
+                    actions[0] = 0;
+                    actions[1] = 1;
+                    actions[2] = 2;
 
                     entities
                         .build_entity()
@@ -143,6 +240,19 @@ impl<'s> System<'s> for SystemSpawnChar {
                                 acceleration: 0.05, 
                             },
                             &mut movements,
+                        )
+                        .with(
+                            ComponentAgent {
+                                actions: actions,
+                                current: 0,
+                            },
+                            &mut agents,
+                        )
+                        .with(
+                            ComponentStockpile {
+                                items: [0; 3],
+                            },
+                            &mut stockpiles
                         )
                         .build();
                 }

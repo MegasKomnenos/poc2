@@ -1,0 +1,11 @@
+#![enable(implicit_some)]
+(
+    name: "Ore Full",
+    curve: Logit,
+    input: MyStockpileOre,
+    foo: 50.0,
+    m: 0.1,
+    k: 1.0,
+    b: 0.5,
+    c: 0.0,
+)

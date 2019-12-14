@@ -44,7 +44,8 @@ fn main() -> amethyst::Result<()> {
         .with(SystemColorMap::default(), "Map Coloring System", &[])
         .with(SystemMovement::default(), "Character Movement System", &[])
         .with(SystemSpawnChar::default(), "Character Spawning System", &[])
-        .with(SystemSetMoveGoal::default(), "Movement Goal System", &[])
+        .with(SystemSetWorkplace::default(), "Workplace Spawning System", &[])
+        .with(SystemAI::default(), "AI System", &[])
         .with_bundle(
             InputBundle::<StringBindings>::new()
                 .with_bindings_from_file(input_config_path)?,

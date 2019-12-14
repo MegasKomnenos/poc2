@@ -18,8 +18,8 @@ use serde::{ Serialize, Deserialize };
 
 use std::collections::HashMap;
 
-type AIData<'a> = (
-    Entities<'a>,
+pub type AIData<'a> = (
+    &'a Entities<'a>,
     Read<'a, Vec<AssetWorkplaceData>>,
     Read<'a, Vec<AssetItemData>>,
     Read<'a, Vec<AIAxis>>,
@@ -57,25 +57,29 @@ pub struct AIAxis {
     pub c: f32,
 }
 
-pub trait AIAction<'a> {
+pub trait AIAction {
     fn get_name(&self) -> &String;
+    fn get_delay(&self) -> &HashMap<Entity, u32>;
 
-    fn eval(&self, _: &Entity, _: AIData<'a>) -> Option<(u8, Option<Entity>, f32)>;
+    fn eval(&self, _: &Entity, _: &AIData) -> Option<(u8, Option<Entity>, f32)>;
 
-    fn init(&mut self, _: &Entity, _: &Entity, _: AIData<'a>) -> bool;
-    fn run(&mut self, _: &Entity, _: &Entity, _: AIData<'a>) -> bool;
+    fn init(&mut self, _: &Entity, _: &Entity, _: &mut AIData) -> bool;
+    fn run(&mut self, _: &Entity, _: &Entity, _: &mut AIData) -> bool;
 }
 
+#[derive(Clone)]
 pub struct AIActionWorkAtSmithy {
     pub name: String,
     pub axis: Vec<u8>,
     pub delays: HashMap<Entity, u32>,
 }
+#[derive(Clone)]
 pub struct AIActionWorkAtFurnace {
     pub name: String,
     pub axis: Vec<u8>,
     pub delays: HashMap<Entity, u32>,
 }
+#[derive(Clone)]
 pub struct AIActionWorkAtMine {
     pub name: String,
     pub axis: Vec<u8>,
@@ -90,17 +94,20 @@ unsafe impl Sync for AIActionWorkAtSmithy {}
 unsafe impl Sync for AIActionWorkAtFurnace {}
 unsafe impl Sync for AIActionWorkAtMine {}
 
-impl<'a> AIAction<'a> for AIActionWorkAtSmithy {
+impl AIAction for AIActionWorkAtSmithy {
     fn get_name(&self) -> &String {
         &self.name
     }
+    fn get_delay(&self) -> &HashMap<Entity, u32> {
+        &self.delays
+    }
 
-    fn eval(&self, me: &Entity, ai_data: AIData) -> Option<(u8, Option<Entity>, f32)> {
+    fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
         let (entities, _, _, axis_datas, _, _, workplaces, _, _) = &ai_data;
 
         let mut out = (0, None, -1.0);
 
-        for (target, workplace) in (entities, workplaces).join() {
+        for (target, workplace) in (*entities, workplaces).join() {
             if workplace.variant == 2 {
                 let mut weight = 1.0;
 
@@ -127,9 +134,9 @@ impl<'a> AIAction<'a> for AIActionWorkAtSmithy {
         }
     }
 
-    fn init(&mut self, me: &Entity, target: &Entity, ai_data: AIData) -> bool {
-        let (_, _, _, _, tilemaps, transforms, _, _, mut movements) = ai_data;
-        let tilemap = (&tilemaps).join().next().unwrap();
+    fn init(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, tilemaps, transforms, _, _, movements) = ai_data;
+        let tilemap = (tilemaps).join().next().unwrap();
 
         let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
         let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
@@ -148,8 +155,8 @@ impl<'a> AIAction<'a> for AIActionWorkAtSmithy {
 
         return true;
     }
-    fn run(&mut self, me: &Entity, target: &Entity, ai_data: AIData) -> bool {
-        let (_, workplace_datas, _, _, _, _, workplaces, mut stockpiles, movements) = ai_data;
+    fn run(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, workplace_datas, _, _, _, _, workplaces, stockpiles, movements) = ai_data;
 
         if movements.get(*me).unwrap().targets.len() > 0 {
             return false;
@@ -189,17 +196,20 @@ impl<'a> AIAction<'a> for AIActionWorkAtSmithy {
     }
 }
 
-impl<'a> AIAction<'a> for AIActionWorkAtFurnace {
+impl AIAction for AIActionWorkAtFurnace {
     fn get_name(&self) -> &String {
         &self.name
     }
+    fn get_delay(&self) -> &HashMap<Entity, u32> {
+        &self.delays
+    }
 
-    fn eval(&self, me: &Entity, ai_data: AIData) -> Option<(u8, Option<Entity>, f32)> {
+    fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
         let (entities, _, _, axis_datas, _, _, workplaces, _, _) = &ai_data;
 
         let mut out = (0, None, -1.0);
 
-        for (target, workplace) in (entities, workplaces).join() {
+        for (target, workplace) in (*entities, workplaces).join() {
             if workplace.variant == 1 {
                 let mut weight = 1.0;
 
@@ -226,9 +236,9 @@ impl<'a> AIAction<'a> for AIActionWorkAtFurnace {
         }
     }
 
-    fn init(&mut self, me: &Entity, target: &Entity, ai_data: AIData) -> bool {
-        let (_, _, _, _, tilemaps, transforms, _, _, mut movements) = ai_data;
-        let tilemap = (&tilemaps).join().next().unwrap();
+    fn init(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, tilemaps, transforms, _, _, movements) = ai_data;
+        let tilemap = (tilemaps).join().next().unwrap();
 
         let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
         let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
@@ -247,8 +257,8 @@ impl<'a> AIAction<'a> for AIActionWorkAtFurnace {
 
         return true;
     }
-    fn run(&mut self, me: &Entity, target: &Entity, ai_data: AIData) -> bool {
-        let (_, workplace_datas, _, _, _, _, workplaces, mut stockpiles, movements) = ai_data;
+    fn run(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, workplace_datas, _, _, _, _, workplaces, stockpiles, movements) = ai_data;
 
         if movements.get(*me).unwrap().targets.len() > 0 {
             return false;
@@ -288,17 +298,20 @@ impl<'a> AIAction<'a> for AIActionWorkAtFurnace {
     }
 }
 
-impl<'a> AIAction<'a> for AIActionWorkAtMine {
+impl AIAction for AIActionWorkAtMine {
     fn get_name(&self) -> &String {
         &self.name
     }
+    fn get_delay(&self) -> &HashMap<Entity, u32> {
+        &self.delays
+    }
 
-    fn eval(&self, me: &Entity, ai_data: AIData) -> Option<(u8, Option<Entity>, f32)> {
-        let (entities, _, _, axis_datas, _, _, workplaces, _, _) = &ai_data;
+    fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
+        let (entities, _, _, axis_datas, _, _, workplaces, _, _) = ai_data;
 
         let mut out = (0, None, -1.0);
 
-        for (target, workplace) in (entities, workplaces).join() {
+        for (target, workplace) in (*entities, workplaces).join() {
             if workplace.variant == 0 {
                 let mut weight = 1.0;
 
@@ -325,9 +338,9 @@ impl<'a> AIAction<'a> for AIActionWorkAtMine {
         }
     }
 
-    fn init(&mut self, me: &Entity, target: &Entity, ai_data: AIData) -> bool {
-        let (_, _, _, _, tilemaps, transforms, _, _, mut movements) = ai_data;
-        let tilemap = (&tilemaps).join().next().unwrap();
+    fn init(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, tilemaps, transforms, _, _, movements) = ai_data;
+        let tilemap = (tilemaps).join().next().unwrap();
 
         let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
         let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
@@ -346,8 +359,8 @@ impl<'a> AIAction<'a> for AIActionWorkAtMine {
 
         return true;
     }
-    fn run(&mut self, me: &Entity, target: &Entity, ai_data: AIData) -> bool {
-        let (_, workplace_datas, _, _, _, _, workplaces, mut stockpiles, movements) = ai_data;
+    fn run(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, workplace_datas, _, _, _, _, workplaces, stockpiles, movements) = ai_data;
 
         if movements.get(*me).unwrap().targets.len() > 0 {
             return false;
