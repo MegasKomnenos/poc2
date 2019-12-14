@@ -1,11 +1,11 @@
 #![enable(implicit_some)]
 (
     name: "Ingot Full",
-    curve: Logit,
+    curve: Quadratic,
     input: MyStockpileIngot,
     foo: 50.0,
-    m: 0.1,
-    k: 1.0,
-    b: 0.5,
+    m: 1.0,
+    k: 3.0,
+    b: 0.0,
     c: 0.0,
 )

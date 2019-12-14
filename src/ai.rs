@@ -127,6 +127,8 @@ impl AIAction for AIActionWorkAtSmithy {
             }
         }
 
+        println!("{}: {}", self.name, out.2);
+
         if out.2 > -1.0 {
             return Some(out);
         } else {
@@ -229,6 +231,8 @@ impl AIAction for AIActionWorkAtFurnace {
             }
         }
 
+        println!("{}: {}", self.name, out.2);
+
         if out.2 > -1.0 {
             return Some(out);
         } else {
@@ -330,6 +334,8 @@ impl AIAction for AIActionWorkAtMine {
                 }
             }
         }
+
+        println!("{}: {}", self.name, out.2);
 
         if out.2 > -1.0 {
             return Some(out);
