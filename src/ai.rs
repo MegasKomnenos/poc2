@@ -1045,13 +1045,13 @@ pub fn clearing_house(variant: &AIInputType, me: &Entity, target: &Entity, foo: 
             return clamp((prices.get(*me).unwrap().buy[3] as f32 / prices.get(*target).unwrap().sell[3] as f32) / foo);
         }
         AIInputType::PriceDiffSellOre => {
-            return clamp((prices.get(*me).unwrap().sell[1] as f32 / prices.get(*target).unwrap().buy[1] as f32) / foo);
+            return clamp((prices.get(*target).unwrap().buy[1] as f32 / prices.get(*me).unwrap().sell[1] as f32) / foo);
         }
         AIInputType::PriceDiffSellIngot => {
-            return clamp((prices.get(*me).unwrap().sell[2] as f32 / prices.get(*target).unwrap().buy[2] as f32) / foo);
+            return clamp((prices.get(*target).unwrap().buy[2] as f32 / prices.get(*me).unwrap().sell[2] as f32) / foo);
         }
         AIInputType::PriceDiffSellTools => {
-            return clamp((prices.get(*me).unwrap().sell[3] as f32 / prices.get(*target).unwrap().buy[3] as f32) / foo);
+            return clamp((prices.get(*target).unwrap().buy[3] as f32 / prices.get(*me).unwrap().sell[3] as f32) / foo);
         }
         AIInputType::CanBuyOre => {
             return clamp((stockpiles.get(*me).unwrap().items[0] as f32 / prices.get(*me).unwrap().buy[1] as f32) / foo);

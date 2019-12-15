@@ -4,8 +4,8 @@
     curve: Quadratic,
     input: PriceDiffBuyOre,
     foo: 5.0,
-    m: 1.494,
-    k: 1.8,
+    m: 1.0692,
+    k: 0.3,
     b: 0.0,
     c: 0.2,
 )

@@ -72,36 +72,36 @@ impl SimpleState for PocLoad {
         let mut axis: Vec<AIAxis> = Vec::new();
         let mut actions: Vec<Box<dyn AIAction>> = Vec::new();
 
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("DistanceFromMe.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OreEmpty.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotEmpty.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsEmpty.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OreFull.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotFull.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsFull.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OrePriceBuy.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotPriceBuy.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsPriceBuy.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OrePriceSell.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotPriceSell.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsPriceSell.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanBuyOre.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanBuyIngot.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanBuyTools.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanSellOre.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanSellIngot.ron")).unwrap()).unwrap());
-        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanSellTools.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("DistanceFromMe.ron")).unwrap()).unwrap()); // 0
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OreEmpty.ron")).unwrap()).unwrap());       // 1
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotEmpty.ron")).unwrap()).unwrap());     // 2
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsEmpty.ron")).unwrap()).unwrap());     // 3
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OreFull.ron")).unwrap()).unwrap());        // 4
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotFull.ron")).unwrap()).unwrap());      // 5
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsFull.ron")).unwrap()).unwrap());      // 6
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OrePriceBuy.ron")).unwrap()).unwrap());    // 7
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotPriceBuy.ron")).unwrap()).unwrap());  // 8
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsPriceBuy.ron")).unwrap()).unwrap());  // 9
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OrePriceSell.ron")).unwrap()).unwrap());   // 10
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotPriceSell.ron")).unwrap()).unwrap()); // 11
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsPriceSell.ron")).unwrap()).unwrap()); // 12
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanBuyOre.ron")).unwrap()).unwrap());      // 13
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanBuyIngot.ron")).unwrap()).unwrap());    // 14
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanBuyTools.ron")).unwrap()).unwrap());    // 15
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanSellOre.ron")).unwrap()).unwrap());     // 16
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanSellIngot.ron")).unwrap()).unwrap());   // 17
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanSellTools.ron")).unwrap()).unwrap());   // 18
 
         actions.push(Box::new(AIActionIdle { name: "Idle".to_string(), axis: Vec::new(), delays: HashMap::new() }));
         actions.push(Box::new(AIActionWorkAtMine { name: "Work at Mine".to_string(), axis: vec![0, 1, 6], delays: HashMap::new() }));
         actions.push(Box::new(AIActionWorkAtFurnace { name: "Work at Furnace".to_string(), axis: vec![0, 2, 4], delays: HashMap::new() }));
         actions.push(Box::new(AIActionWorkAtSmithy { name: "Work at Smithy".to_string(), axis: vec![0, 3, 5], delays: HashMap::new() }));
-        actions.push(Box::new(AIActionBuyOre { name: "Buy Ore".to_string(), axis: vec![0, 7, 13], delays: HashMap::new() }));
-        actions.push(Box::new(AIActionBuyIngot { name: "Buy Ingot".to_string(), axis: vec![0, 8, 14], delays: HashMap::new() }));
-        actions.push(Box::new(AIActionBuyTools { name: "Buy Tools".to_string(), axis: vec![0, 9, 15], delays: HashMap::new() }));
-        actions.push(Box::new(AIActionSellOre { name: "Sell Ore".to_string(), axis: vec![0, 10, 16], delays: HashMap::new() }));
-        actions.push(Box::new(AIActionSellIngot { name: "Sell Ingot".to_string(), axis: vec![0, 11, 17], delays: HashMap::new() }));
-        actions.push(Box::new(AIActionSellTools { name: "Sell Tools".to_string(), axis: vec![0, 12, 18], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionBuyOre { name: "Buy Ore".to_string(), axis: vec![0, 1, 7, 13], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionBuyIngot { name: "Buy Ingot".to_string(), axis: vec![0, 2, 8, 14], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionBuyTools { name: "Buy Tools".to_string(), axis: vec![0, 3, 9, 15], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionSellOre { name: "Sell Ore".to_string(), axis: vec![0, 4, 10, 16], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionSellIngot { name: "Sell Ingot".to_string(), axis: vec![0, 5, 11, 17], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionSellTools { name: "Sell Tools".to_string(), axis: vec![0, 6, 12, 18], delays: HashMap::new() }));
 
         data.world.insert(axis);
         data.world.insert(actions);
@@ -128,7 +128,7 @@ impl SimpleState for PocLoad {
                 println!("{}: {}, {}, {}", item_datas[i].name, stockpile.items[i], price.buy[i], price.sell[i]);
             }
         }
-
+        
         Trans::None
     }
 
