@@ -1,0 +1,11 @@
+#![enable(implicit_some)]
+(
+    name: "Can Sell Ore",
+    curve: Quadratic,
+    input: CanSellOre,
+    foo: 10.0,
+    m: 1.208,
+    k: 1.8,
+    b: 0.0,
+    c: 0.1,
+)

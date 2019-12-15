@@ -1,11 +1,11 @@
 #![enable(implicit_some)]
 (
-    name: "Tools Empty",
+    name: "Tools Price Sell",
     curve: Quadratic,
-    input: MyStockpileTools,
-    foo: 100.0,
+    input: PriceDiffSellTools,
+    foo: 1.0,
     m: -1.0,
-    k: 3.0,
+    k: 0.5,
     b: 1.0,
     c: 0.0,
 )

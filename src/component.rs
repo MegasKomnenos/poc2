@@ -1,4 +1,5 @@
 use crate::misc::*;
+use crate::NUM_ITEM;
 
 use amethyst::{
     core::math::{ Point3, Vector3 },
@@ -13,9 +14,20 @@ impl Component for ComponentWorkplace {
 }
 
 pub struct ComponentStockpile {
-    pub items: [u16; 3],
+    pub items: [u16; NUM_ITEM],
 }
 impl Component for ComponentStockpile {
+    type Storage = DenseVecStorage<Self>;
+}
+
+pub struct ComponentPrice {
+    pub update: [bool; NUM_ITEM],
+    pub buy: [u16; NUM_ITEM],
+    pub sell: [u16; NUM_ITEM],
+    pub weight: [f32; NUM_ITEM],
+    pub decay: [f32; NUM_ITEM],
+}
+impl Component for ComponentPrice {
     type Storage = DenseVecStorage<Self>;
 }
 

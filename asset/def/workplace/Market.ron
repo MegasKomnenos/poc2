@@ -1,17 +1,17 @@
 #![enable(implicit_some)]
 (
-    name: "Mine",
+    name: "Market",
     inputs: [
         0,
         0,
         0,
-        1,
+        0,
     ],
     outs: [
         0,
-        1,
+        0,
         0,
         0,
     ],
-    duration: 60,
+    duration: 0,
 )

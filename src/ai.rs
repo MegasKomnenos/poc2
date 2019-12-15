@@ -1,6 +1,7 @@
 use crate::misc::*;
 use crate::component::*;
 use crate::asset::*;
+use crate::NUM_ITEM;
 
 use std::f32::consts::E;
 
@@ -28,6 +29,7 @@ pub type AIData<'a> = (
     WriteStorage<'a, ComponentWorkplace>,
     WriteStorage<'a, ComponentStockpile>,
     WriteStorage<'a, ComponentMovement>,
+    WriteStorage<'a, ComponentPrice>,
 );
 
 #[derive(Serialize, Deserialize)]
@@ -43,6 +45,18 @@ pub enum AIInputType {
     MyStockpileIngot,
     MyStockpileTools,
     DistanceFromMe,
+    PriceDiffBuyOre,
+    PriceDiffBuyIngot,
+    PriceDiffBuyTools,
+    PriceDiffSellOre,
+    PriceDiffSellIngot,
+    PriceDiffSellTools,
+    CanBuyOre,
+    CanBuyIngot,
+    CanBuyTools,
+    CanSellOre,
+    CanSellIngot,
+    CanSellTools,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -69,24 +83,55 @@ pub trait AIAction: Send + Sync {
 
 pub struct AIActionIdle {
     pub name: String,
-    pub axis: Vec<u8>,
+    pub axis: Vec<u16>,
     pub delays: HashMap<Entity, u32>,
 }
 pub struct AIActionWorkAtSmithy {
     pub name: String,
-    pub axis: Vec<u8>,
+    pub axis: Vec<u16>,
     pub delays: HashMap<Entity, u32>,
 }
 pub struct AIActionWorkAtFurnace {
     pub name: String,
-    pub axis: Vec<u8>,
+    pub axis: Vec<u16>,
     pub delays: HashMap<Entity, u32>,
 }
 pub struct AIActionWorkAtMine {
     pub name: String,
-    pub axis: Vec<u8>,
+    pub axis: Vec<u16>,
     pub delays: HashMap<Entity, u32>,
 }
+pub struct AIActionBuyOre {
+    pub name: String,
+    pub axis: Vec<u16>,
+    pub delays: HashMap<Entity, u32>,
+}
+pub struct AIActionBuyIngot {
+    pub name: String,
+    pub axis: Vec<u16>,
+    pub delays: HashMap<Entity, u32>,
+}
+pub struct AIActionBuyTools {
+    pub name: String,
+    pub axis: Vec<u16>,
+    pub delays: HashMap<Entity, u32>,
+}
+pub struct AIActionSellOre {
+    pub name: String,
+    pub axis: Vec<u16>,
+    pub delays: HashMap<Entity, u32>,
+}
+pub struct AIActionSellIngot {
+    pub name: String,
+    pub axis: Vec<u16>,
+    pub delays: HashMap<Entity, u32>,
+}
+pub struct AIActionSellTools {
+    pub name: String,
+    pub axis: Vec<u16>,
+    pub delays: HashMap<Entity, u32>,
+}
+
 
 impl AIAction for AIActionIdle {
     fn get_name(&self) -> &String {
@@ -97,7 +142,7 @@ impl AIAction for AIActionIdle {
     }
 
     fn eval(&self, _: &Entity, _: &AIData) -> Option<(u8, Option<Entity>, f32)> {
-        return Some((3, None, 0.0));
+        return Some((0, None, 0.0));
     }
 
     fn init(&mut self, _: &Entity, _: &Entity, _: &mut AIData) -> bool {
@@ -117,9 +162,9 @@ impl AIAction for AIActionWorkAtSmithy {
     }
 
     fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
-        let (entities, _, _, axis_datas, _, _, workplaces, _, _) = &ai_data;
+        let (entities, _, _, axis_datas, _, _, workplaces, _, _, _) = &ai_data;
 
-        let mut out = (2, None, 0.0);
+        let mut out = (3, None, 0.0);
 
         for (target, workplace) in (*entities, workplaces).join() {
             if workplace.variant == 2 {
@@ -141,7 +186,7 @@ impl AIAction for AIActionWorkAtSmithy {
             }
         }
 
-        println!("{}: {}", self.name, out.2);
+        //println!("{}: {}", self.name, out.2);
 
         if out.2 > 0.0 {
             return Some(out);
@@ -151,7 +196,7 @@ impl AIAction for AIActionWorkAtSmithy {
     }
 
     fn init(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
-        let (_, _, _, _, tilemaps, transforms, _, _, movements) = ai_data;
+        let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
         let tilemap = (tilemaps).join().next().unwrap();
 
         let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
@@ -172,7 +217,7 @@ impl AIAction for AIActionWorkAtSmithy {
         return true;
     }
     fn run(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
-        let (_, workplace_datas, _, _, _, _, workplaces, stockpiles, movements) = ai_data;
+        let (_, workplace_datas, _, _, _, _, workplaces, stockpiles, movements, prices) = ai_data;
 
         if movements.get(*me).unwrap().targets.len() > 0 {
             return false;
@@ -200,6 +245,8 @@ impl AIAction for AIActionWorkAtSmithy {
                     stockpile.items[i] -= *input as u16;
                 }
             }
+
+            prices.get_mut(*me).unwrap().update[1] = true;
 
             return true;
         } else {
@@ -221,9 +268,9 @@ impl AIAction for AIActionWorkAtFurnace {
     }
 
     fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
-        let (entities, _, _, axis_datas, _, _, workplaces, _, _) = &ai_data;
+        let (entities, _, _, axis_datas, _, _, workplaces, _, _, _) = &ai_data;
 
-        let mut out = (1, None, 0.0);
+        let mut out = (2, None, 0.0);
 
         for (target, workplace) in (*entities, workplaces).join() {
             if workplace.variant == 1 {
@@ -245,7 +292,7 @@ impl AIAction for AIActionWorkAtFurnace {
             }
         }
 
-        println!("{}: {}", self.name, out.2);
+        //println!("{}: {}", self.name, out.2);
 
         if out.2 > 0.0 {
             return Some(out);
@@ -255,7 +302,7 @@ impl AIAction for AIActionWorkAtFurnace {
     }
 
     fn init(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
-        let (_, _, _, _, tilemaps, transforms, _, _, movements) = ai_data;
+        let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
         let tilemap = (tilemaps).join().next().unwrap();
 
         let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
@@ -276,7 +323,7 @@ impl AIAction for AIActionWorkAtFurnace {
         return true;
     }
     fn run(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
-        let (_, workplace_datas, _, _, _, _, workplaces, stockpiles, movements) = ai_data;
+        let (_, workplace_datas, _, _, _, _, workplaces, stockpiles, movements, prices) = ai_data;
 
         if movements.get(*me).unwrap().targets.len() > 0 {
             return false;
@@ -304,6 +351,8 @@ impl AIAction for AIActionWorkAtFurnace {
                     stockpile.items[i] -= *input as u16;
                 }
             }
+
+            prices.get_mut(*me).unwrap().update[2] = true;
 
             return true;
         } else {
@@ -325,9 +374,9 @@ impl AIAction for AIActionWorkAtMine {
     }
 
     fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
-        let (entities, _, _, axis_datas, _, _, workplaces, _, _) = ai_data;
+        let (entities, _, _, axis_datas, _, _, workplaces, _, _, _) = ai_data;
 
-        let mut out = (0, None, 0.0);
+        let mut out = (1, None, 0.0);
 
         for (target, workplace) in (*entities, workplaces).join() {
             if workplace.variant == 0 {
@@ -349,7 +398,7 @@ impl AIAction for AIActionWorkAtMine {
             }
         }
 
-        println!("{}: {}", self.name, out.2);
+        //println!("{}: {}", self.name, out.2);
 
         if out.2 > 0.0 {
             return Some(out);
@@ -359,7 +408,7 @@ impl AIAction for AIActionWorkAtMine {
     }
 
     fn init(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
-        let (_, _, _, _, tilemaps, transforms, _, _, movements) = ai_data;
+        let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
         let tilemap = (tilemaps).join().next().unwrap();
 
         let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
@@ -380,7 +429,7 @@ impl AIAction for AIActionWorkAtMine {
         return true;
     }
     fn run(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
-        let (_, workplace_datas, _, _, _, _, workplaces, stockpiles, movements) = ai_data;
+        let (_, workplace_datas, _, _, _, _, workplaces, stockpiles, movements, prices) = ai_data;
 
         if movements.get(*me).unwrap().targets.len() > 0 {
             return false;
@@ -409,6 +458,8 @@ impl AIAction for AIActionWorkAtMine {
                 }
             }
 
+            prices.get_mut(*me).unwrap().update[3] = true;
+
             return true;
         } else {
             let workplace = workplaces.get(*target).unwrap();
@@ -420,23 +471,605 @@ impl AIAction for AIActionWorkAtMine {
     }
 }
 
+impl AIAction for AIActionBuyOre {
+    fn get_name(&self) -> &String {
+        &self.name
+    }
+    fn get_delay(&self) -> &HashMap<Entity, u32> {
+        &self.delays
+    }
+
+    fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
+        let (entities, _, _, axis_datas, _, _, workplaces, stockpiles, _, prices) = ai_data;
+
+        let mut out = (4, None, 0.0);
+
+        for (target, workplace, _, stockpile) in (*entities, workplaces, prices, stockpiles).join() {
+            if workplace.variant == 3 && stockpile.items[1] >= 1 {
+                let mut weight = 1.0;
+
+                for axis_index in self.axis.iter() {
+                    let axis = &axis_datas[*axis_index as usize];
+
+                    let x = clearing_house(&axis.input, me, &target, axis.foo, &ai_data);
+                    let y = response_curve(&axis.curve, x, axis.m, axis.k, axis.b, axis.c);
+
+                    weight *= y;
+                }
+
+                if weight > out.2 {
+                    out.1 = Some(target);
+                    out.2 = weight;
+                }
+            }
+        }
+
+        //println!("{}: {}", self.name, out.2);
+
+        if out.2 > 0.0 {
+            return Some(out);
+        } else {
+            return None;
+        }
+    }
+
+    fn init(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
+        let tilemap = (tilemaps).join().next().unwrap();
+
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+
+        if me_point != target_point {
+            let targets = get_targets(&me_point, &target_point, &tilemap);
+
+            if targets.len() > 0 {
+                movements.get_mut(*me).unwrap().targets = targets;
+            } else {
+                return false;
+            }
+        } else {
+            movements.get_mut(*me).unwrap().targets.clear();
+        }
+
+        return true;
+    }
+    fn run(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, _, _, _, stockpiles, movements, prices) = ai_data;
+
+        if movements.get(*me).unwrap().targets.len() > 0 {
+            return false;
+        }
+        
+        let stockpile = stockpiles.get_mut(*target).unwrap();
+        let price = prices.get(*target).unwrap();
+
+        if prices.get(*me).unwrap().buy[1] > price.sell[1] && stockpile.items[1] >= 1 {
+            stockpile.items[1] -= 1;
+            stockpile.items[0] += price.sell[1];
+
+            let stockpile = stockpiles.get_mut(*me).unwrap();
+
+            stockpile.items[1] += 1;
+            stockpile.items[0] -= price.sell[1];
+
+            prices.get_mut(*me).unwrap().update = [true; NUM_ITEM];
+            prices.get_mut(*target).unwrap().update = [true; NUM_ITEM];
+        }
+
+        return true;
+    }
+}
+
+impl AIAction for AIActionBuyIngot {
+    fn get_name(&self) -> &String {
+        &self.name
+    }
+    fn get_delay(&self) -> &HashMap<Entity, u32> {
+        &self.delays
+    }
+
+    fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
+        let (entities, _, _, axis_datas, _, _, workplaces, stockpiles, _, prices) = ai_data;
+
+        let mut out = (5, None, 0.0);
+
+        for (target, workplace, _, stockpile) in (*entities, workplaces, prices, stockpiles).join() {
+            if workplace.variant == 3 && stockpile.items[2] >= 1 {
+                let mut weight = 1.0;
+
+                for axis_index in self.axis.iter() {
+                    let axis = &axis_datas[*axis_index as usize];
+
+                    let x = clearing_house(&axis.input, me, &target, axis.foo, &ai_data);
+                    let y = response_curve(&axis.curve, x, axis.m, axis.k, axis.b, axis.c);
+
+                    weight *= y;
+                }
+
+                if weight > out.2 {
+                    out.1 = Some(target);
+                    out.2 = weight;
+                }
+            }
+        }
+
+        //println!("{}: {}", self.name, out.2);
+
+        if out.2 > 0.0 {
+            return Some(out);
+        } else {
+            return None;
+        }
+    }
+
+    fn init(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
+        let tilemap = (tilemaps).join().next().unwrap();
+
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+
+        if me_point != target_point {
+            let targets = get_targets(&me_point, &target_point, &tilemap);
+
+            if targets.len() > 0 {
+                movements.get_mut(*me).unwrap().targets = targets;
+            } else {
+                return false;
+            }
+        } else {
+            movements.get_mut(*me).unwrap().targets.clear();
+        }
+
+        return true;
+    }
+    fn run(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, _, _, _, stockpiles, movements, prices) = ai_data;
+
+        if movements.get(*me).unwrap().targets.len() > 0 {
+            return false;
+        }
+        
+        let stockpile = stockpiles.get_mut(*target).unwrap();
+        let price = prices.get(*target).unwrap();
+
+        if prices.get(*me).unwrap().buy[2] > price.sell[2] && stockpile.items[2] >= 1 {
+            stockpile.items[2] -= 1;
+            stockpile.items[0] += price.sell[2];
+
+            let stockpile = stockpiles.get_mut(*me).unwrap();
+
+            stockpile.items[2] += 1;
+            stockpile.items[0] -= price.sell[2];
+
+            prices.get_mut(*me).unwrap().update = [true; NUM_ITEM];
+            prices.get_mut(*target).unwrap().update = [true; NUM_ITEM];
+        }
+
+        return true;
+    }
+}
+
+impl AIAction for AIActionBuyTools {
+    fn get_name(&self) -> &String {
+        &self.name
+    }
+    fn get_delay(&self) -> &HashMap<Entity, u32> {
+        &self.delays
+    }
+
+    fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
+        let (entities, _, _, axis_datas, _, _, workplaces, stockpiles, _, prices) = ai_data;
+
+        let mut out = (6, None, 0.0);
+
+        for (target, workplace, _, stockpile) in (*entities, workplaces, prices, stockpiles).join() {
+            if workplace.variant == 3 && stockpile.items[3] >= 1 {
+                let mut weight = 1.0;
+
+                for axis_index in self.axis.iter() {
+                    let axis = &axis_datas[*axis_index as usize];
+
+                    let x = clearing_house(&axis.input, me, &target, axis.foo, &ai_data);
+                    let y = response_curve(&axis.curve, x, axis.m, axis.k, axis.b, axis.c);
+
+                    weight *= y;
+                }
+
+                if weight > out.2 {
+                    out.1 = Some(target);
+                    out.2 = weight;
+                }
+            }
+        }
+
+        //println!("{}: {}", self.name, out.2);
+
+        if out.2 > 0.0 {
+            return Some(out);
+        } else {
+            return None;
+        }
+    }
+
+    fn init(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
+        let tilemap = (tilemaps).join().next().unwrap();
+
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+
+        if me_point != target_point {
+            let targets = get_targets(&me_point, &target_point, &tilemap);
+
+            if targets.len() > 0 {
+                movements.get_mut(*me).unwrap().targets = targets;
+            } else {
+                return false;
+            }
+        } else {
+            movements.get_mut(*me).unwrap().targets.clear();
+        }
+
+        return true;
+    }
+    fn run(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, _, _, _, stockpiles, movements, prices) = ai_data;
+
+        if movements.get(*me).unwrap().targets.len() > 0 {
+            return false;
+        }
+        
+        let stockpile = stockpiles.get_mut(*target).unwrap();
+        let price = prices.get(*target).unwrap();
+
+        if prices.get(*me).unwrap().buy[3] > price.sell[3] && stockpile.items[3] >= 1 {
+            stockpile.items[3] -= 1;
+            stockpile.items[0] += price.sell[3];
+
+            let stockpile = stockpiles.get_mut(*me).unwrap();
+
+            stockpile.items[3] += 1;
+            stockpile.items[0] -= price.sell[3];
+
+            prices.get_mut(*me).unwrap().update = [true; NUM_ITEM];
+            prices.get_mut(*target).unwrap().update = [true; NUM_ITEM];
+        }
+
+        return true;
+    }
+}
+
+impl AIAction for AIActionSellOre {
+    fn get_name(&self) -> &String {
+        &self.name
+    }
+    fn get_delay(&self) -> &HashMap<Entity, u32> {
+        &self.delays
+    }
+
+    fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
+        let (entities, _, _, axis_datas, _, _, workplaces, stockpiles, _, prices) = ai_data;
+
+        let mut out = (7, None, 0.0);
+
+        let stockpile = stockpiles.get(*me).unwrap();
+
+        for (target, workplace, _, _) in (*entities, workplaces, prices, stockpiles).join() {
+            if workplace.variant == 3 && stockpile.items[1] >= 1 {
+                let mut weight = 1.0;
+
+                for axis_index in self.axis.iter() {
+                    let axis = &axis_datas[*axis_index as usize];
+
+                    let x = clearing_house(&axis.input, me, &target, axis.foo, &ai_data);
+                    let y = response_curve(&axis.curve, x, axis.m, axis.k, axis.b, axis.c);
+
+                    weight *= y;
+                }
+
+                if weight > out.2 {
+                    out.1 = Some(target);
+                    out.2 = weight;
+                }
+            }
+        }
+
+        //println!("{}: {}", self.name, out.2);
+
+        if out.2 > 0.0 {
+            return Some(out);
+        } else {
+            return None;
+        }
+    }
+
+    fn init(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
+        let tilemap = (tilemaps).join().next().unwrap();
+
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+
+        if me_point != target_point {
+            let targets = get_targets(&me_point, &target_point, &tilemap);
+
+            if targets.len() > 0 {
+                movements.get_mut(*me).unwrap().targets = targets;
+            } else {
+                return false;
+            }
+        } else {
+            movements.get_mut(*me).unwrap().targets.clear();
+        }
+
+        return true;
+    }
+    fn run(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, _, _, _, stockpiles, movements, prices) = ai_data;
+
+        if movements.get(*me).unwrap().targets.len() > 0 {
+            return false;
+        }
+        
+        let stockpile = stockpiles.get_mut(*target).unwrap();
+        let price = prices.get(*target).unwrap();
+
+        if prices.get(*me).unwrap().sell[1] < price.buy[1] && stockpile.items[0] >= price.buy[1] {
+            stockpile.items[1] += 1;
+            stockpile.items[0] -= price.buy[1];
+
+            let stockpile = stockpiles.get_mut(*me).unwrap();
+
+            stockpile.items[1] -= 1;
+            stockpile.items[0] += price.buy[1];
+
+            prices.get_mut(*me).unwrap().update = [true; NUM_ITEM];
+            prices.get_mut(*target).unwrap().update = [true; NUM_ITEM];
+        }
+
+        return true;
+    }
+}
+
+impl AIAction for AIActionSellIngot {
+    fn get_name(&self) -> &String {
+        &self.name
+    }
+    fn get_delay(&self) -> &HashMap<Entity, u32> {
+        &self.delays
+    }
+
+    fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
+        let (entities, _, _, axis_datas, _, _, workplaces, stockpiles, _, prices) = ai_data;
+
+        let mut out = (8, None, 0.0);
+
+        let stockpile = stockpiles.get(*me).unwrap();
+
+        for (target, workplace, _, _) in (*entities, workplaces, prices, stockpiles).join() {
+            if workplace.variant == 3 && stockpile.items[2] >= 1 {
+                let mut weight = 1.0;
+
+                for axis_index in self.axis.iter() {
+                    let axis = &axis_datas[*axis_index as usize];
+
+                    let x = clearing_house(&axis.input, me, &target, axis.foo, &ai_data);
+                    let y = response_curve(&axis.curve, x, axis.m, axis.k, axis.b, axis.c);
+
+                    weight *= y;
+                }
+
+                if weight > out.2 {
+                    out.1 = Some(target);
+                    out.2 = weight;
+                }
+            }
+        }
+
+        //println!("{}: {}", self.name, out.2);
+
+        if out.2 > 0.0 {
+            return Some(out);
+        } else {
+            return None;
+        }
+    }
+
+    fn init(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
+        let tilemap = (tilemaps).join().next().unwrap();
+
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+
+        if me_point != target_point {
+            let targets = get_targets(&me_point, &target_point, &tilemap);
+
+            if targets.len() > 0 {
+                movements.get_mut(*me).unwrap().targets = targets;
+            } else {
+                return false;
+            }
+        } else {
+            movements.get_mut(*me).unwrap().targets.clear();
+        }
+
+        return true;
+    }
+    fn run(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, _, _, _, stockpiles, movements, prices) = ai_data;
+
+        if movements.get(*me).unwrap().targets.len() > 0 {
+            return false;
+        }
+        
+        let stockpile = stockpiles.get_mut(*target).unwrap();
+        let price = prices.get(*target).unwrap();
+
+        if prices.get(*me).unwrap().sell[2] < price.buy[2] && stockpile.items[0] >= price.buy[2] {
+            stockpile.items[2] += 1;
+            stockpile.items[0] -= price.buy[2];
+
+            let stockpile = stockpiles.get_mut(*me).unwrap();
+
+            stockpile.items[2] -= 1;
+            stockpile.items[0] += price.buy[2];
+
+            prices.get_mut(*me).unwrap().update = [true; NUM_ITEM];
+            prices.get_mut(*target).unwrap().update = [true; NUM_ITEM];
+        }
+
+        return true;
+    }
+}
+
+impl AIAction for AIActionSellTools {
+    fn get_name(&self) -> &String {
+        &self.name
+    }
+    fn get_delay(&self) -> &HashMap<Entity, u32> {
+        &self.delays
+    }
+
+    fn eval(&self, me: &Entity, ai_data: &AIData) -> Option<(u8, Option<Entity>, f32)> {
+        let (entities, _, _, axis_datas, _, _, workplaces, stockpiles, _, prices) = ai_data;
+
+        let mut out = (9, None, 0.0);
+
+        let stockpile = stockpiles.get(*me).unwrap();
+
+        for (target, workplace, _, _) in (*entities, workplaces, prices, stockpiles).join() {
+            if workplace.variant == 3 && stockpile.items[3] >= 1 {
+                let mut weight = 1.0;
+
+                for axis_index in self.axis.iter() {
+                    let axis = &axis_datas[*axis_index as usize];
+
+                    let x = clearing_house(&axis.input, me, &target, axis.foo, &ai_data);
+                    let y = response_curve(&axis.curve, x, axis.m, axis.k, axis.b, axis.c);
+
+                    weight *= y;
+                }
+
+                if weight > out.2 {
+                    out.1 = Some(target);
+                    out.2 = weight;
+                }
+            }
+        }
+
+        //println!("{}: {}", self.name, out.2);
+
+        if out.2 > 0.0 {
+            return Some(out);
+        } else {
+            return None;
+        }
+    }
+
+    fn init(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
+        let tilemap = (tilemaps).join().next().unwrap();
+
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+
+        if me_point != target_point {
+            let targets = get_targets(&me_point, &target_point, &tilemap);
+
+            if targets.len() > 0 {
+                movements.get_mut(*me).unwrap().targets = targets;
+            } else {
+                return false;
+            }
+        } else {
+            movements.get_mut(*me).unwrap().targets.clear();
+        }
+
+        return true;
+    }
+    fn run(&mut self, me: &Entity, target: &Entity, ai_data: &mut AIData) -> bool {
+        let (_, _, _, _, _, _, _, stockpiles, movements, prices) = ai_data;
+
+        if movements.get(*me).unwrap().targets.len() > 0 {
+            return false;
+        }
+        
+        let stockpile = stockpiles.get_mut(*target).unwrap();
+        let price = prices.get(*target).unwrap();
+
+        if prices.get(*me).unwrap().sell[3] < price.buy[3] && stockpile.items[0] >= price.buy[3] {
+            stockpile.items[3] += 1;
+            stockpile.items[0] -= price.buy[3];
+
+            let stockpile = stockpiles.get_mut(*me).unwrap();
+
+            stockpile.items[3] -= 1;
+            stockpile.items[0] += price.buy[3];
+
+            prices.get_mut(*me).unwrap().update = [true; NUM_ITEM];
+            prices.get_mut(*target).unwrap().update = [true; NUM_ITEM];
+        }
+
+        return true;
+    }
+}
+
 pub fn clearing_house(variant: &AIInputType, me: &Entity, target: &Entity, foo: f32, ai_data: &AIData) -> f32 {
-    let (entities, workplace_datas, item_datas, _, tilemaps, transforms, workplaces, stockpiles, movements) = ai_data;
+    let (entities, workplace_datas, item_datas, _, tilemaps, transforms, workplaces, stockpiles, movements, prices) = ai_data;
     
     match variant {
         AIInputType::MyStockpileOre => {
-            return clamp(stockpiles.get(*me).unwrap().items[0] as f32 / foo);
-        }
-        AIInputType::MyStockpileIngot => {
             return clamp(stockpiles.get(*me).unwrap().items[1] as f32 / foo);
         }
-        AIInputType::MyStockpileTools => {
+        AIInputType::MyStockpileIngot => {
             return clamp(stockpiles.get(*me).unwrap().items[2] as f32 / foo);
+        }
+        AIInputType::MyStockpileTools => {
+            return clamp(stockpiles.get(*me).unwrap().items[3] as f32 / foo);
         }
         AIInputType::DistanceFromMe => {
             let diff = transforms.get(*me).unwrap().translation() - transforms.get(*target).unwrap().translation();
             let dist = (diff[0].powf(2.0) + diff[1].powf(2.0) + diff[2].powf(2.0)).sqrt();
             return clamp(dist / foo);
+        }
+        AIInputType::PriceDiffBuyOre => {
+            return clamp((prices.get(*me).unwrap().buy[1] as f32 / prices.get(*target).unwrap().sell[1] as f32) / foo);
+        }
+        AIInputType::PriceDiffBuyIngot => {
+            return clamp((prices.get(*me).unwrap().buy[2] as f32 / prices.get(*target).unwrap().sell[2] as f32) / foo);
+        }
+        AIInputType::PriceDiffBuyTools => {
+            return clamp((prices.get(*me).unwrap().buy[3] as f32 / prices.get(*target).unwrap().sell[3] as f32) / foo);
+        }
+        AIInputType::PriceDiffSellOre => {
+            return clamp((prices.get(*me).unwrap().sell[1] as f32 / prices.get(*target).unwrap().buy[1] as f32) / foo);
+        }
+        AIInputType::PriceDiffSellIngot => {
+            return clamp((prices.get(*me).unwrap().sell[2] as f32 / prices.get(*target).unwrap().buy[2] as f32) / foo);
+        }
+        AIInputType::PriceDiffSellTools => {
+            return clamp((prices.get(*me).unwrap().sell[3] as f32 / prices.get(*target).unwrap().buy[3] as f32) / foo);
+        }
+        AIInputType::CanBuyOre => {
+            return clamp((stockpiles.get(*me).unwrap().items[0] as f32 / prices.get(*me).unwrap().buy[1] as f32) / foo);
+        }
+        AIInputType::CanBuyIngot => {
+            return clamp((stockpiles.get(*me).unwrap().items[0] as f32 / prices.get(*me).unwrap().buy[2] as f32) / foo);
+        }
+        AIInputType::CanBuyTools => {
+            return clamp((stockpiles.get(*me).unwrap().items[0] as f32 / prices.get(*me).unwrap().buy[3] as f32) / foo);
+        }
+        AIInputType::CanSellOre => {
+            return clamp(stockpiles.get(*me).unwrap().items[1] as f32 / foo);
+        }
+        AIInputType::CanSellIngot => {
+            return clamp(stockpiles.get(*me).unwrap().items[2] as f32 / foo);
+        }
+        AIInputType::CanSellTools => {
+            return clamp(stockpiles.get(*me).unwrap().items[3] as f32 / foo);
         }
     }
 }

@@ -1,10 +1,13 @@
 use crate::misc::*;
 use crate::asset::*;
 use crate::ai::*;
+use crate::component::*;
+use crate::NUM_ITEM;
 
 use amethyst::{
     prelude::*,
     core::{ math::Vector3, Transform },
+    ecs::Join,
     input::{ is_close_requested, is_key_down, },
     renderer::camera::Camera,
     window::ScreenDimensions,
@@ -56,7 +59,9 @@ impl SimpleState for PocLoad {
         workplaces.push(from_str::<AssetWorkplaceData>(&read_to_string(path.join("def").join("workplace").join("Mine.ron")).unwrap()).unwrap());
         workplaces.push(from_str::<AssetWorkplaceData>(&read_to_string(path.join("def").join("workplace").join("Furnace.ron")).unwrap()).unwrap());
         workplaces.push(from_str::<AssetWorkplaceData>(&read_to_string(path.join("def").join("workplace").join("Smithy.ron")).unwrap()).unwrap());
+        workplaces.push(from_str::<AssetWorkplaceData>(&read_to_string(path.join("def").join("workplace").join("Market.ron")).unwrap()).unwrap());
 
+        items.push(from_str::<AssetItemData>(&read_to_string(path.join("def").join("item").join("Amethyst.ron")).unwrap()).unwrap());
         items.push(from_str::<AssetItemData>(&read_to_string(path.join("def").join("item").join("Ore.ron")).unwrap()).unwrap());
         items.push(from_str::<AssetItemData>(&read_to_string(path.join("def").join("item").join("Ingot.ron")).unwrap()).unwrap());
         items.push(from_str::<AssetItemData>(&read_to_string(path.join("def").join("item").join("Tools.ron")).unwrap()).unwrap());
@@ -73,17 +78,57 @@ impl SimpleState for PocLoad {
         axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsEmpty.ron")).unwrap()).unwrap());
         axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OreFull.ron")).unwrap()).unwrap());
         axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotFull.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsFull.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OrePriceBuy.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotPriceBuy.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsPriceBuy.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("OrePriceSell.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("IngotPriceSell.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("ToolsPriceSell.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanBuyOre.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanBuyIngot.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanBuyTools.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanSellOre.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanSellIngot.ron")).unwrap()).unwrap());
+        axis.push(from_str::<AIAxis>(&read_to_string(path.join("def").join("axis").join("CanSellTools.ron")).unwrap()).unwrap());
 
-        actions.push(Box::new(AIActionWorkAtMine { name: "Work at Mine".to_string(), axis: vec![0, 1], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionIdle { name: "Idle".to_string(), axis: Vec::new(), delays: HashMap::new() }));
+        actions.push(Box::new(AIActionWorkAtMine { name: "Work at Mine".to_string(), axis: vec![0, 1, 6], delays: HashMap::new() }));
         actions.push(Box::new(AIActionWorkAtFurnace { name: "Work at Furnace".to_string(), axis: vec![0, 2, 4], delays: HashMap::new() }));
         actions.push(Box::new(AIActionWorkAtSmithy { name: "Work at Smithy".to_string(), axis: vec![0, 3, 5], delays: HashMap::new() }));
-        actions.push(Box::new(AIActionIdle { name: "Idle".to_string(), axis: Vec::new(), delays: HashMap::new() }));
+        actions.push(Box::new(AIActionBuyOre { name: "Buy Ore".to_string(), axis: vec![0, 7, 13], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionBuyIngot { name: "Buy Ingot".to_string(), axis: vec![0, 8, 14], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionBuyTools { name: "Buy Tools".to_string(), axis: vec![0, 9, 15], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionSellOre { name: "Sell Ore".to_string(), axis: vec![0, 10, 16], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionSellIngot { name: "Sell Ingot".to_string(), axis: vec![0, 11, 17], delays: HashMap::new() }));
+        actions.push(Box::new(AIActionSellTools { name: "Sell Tools".to_string(), axis: vec![0, 12, 18], delays: HashMap::new() }));
 
         data.world.insert(axis);
         data.world.insert(actions);
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        let workplaces = data.world.read_storage::<ComponentWorkplace>();
+        let prices = data.world.read_storage::<ComponentPrice>();
+        let stockpiles = data.world.read_storage::<ComponentStockpile>();
+        let agents = data.world.read_storage::<ComponentAgent>();
+        let item_datas = data.world.read_resource::<Vec<AssetItemData>>();
+
+        for (_, price, stockpile) in (&workplaces, &prices, &stockpiles).join() {
+            println!("Market");
+
+            for i in 0..NUM_ITEM {
+                println!("{}: {}, {}, {}", item_datas[i].name, stockpile.items[i], price.buy[i], price.sell[i]);
+            }
+        }
+        for (_, price, stockpile) in (&agents, &prices, &stockpiles).join() {
+            println!("Agent");
+
+            for i in 0..NUM_ITEM {
+                println!("{}: {}, {}, {}", item_datas[i].name, stockpile.items[i], price.buy[i], price.sell[i]);
+            }
+        }
+
         Trans::None
     }
 

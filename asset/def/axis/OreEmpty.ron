@@ -3,7 +3,7 @@
     name: "Ore Empty",
     curve: Quadratic,
     input: MyStockpileOre,
-    foo: 50.0,
+    foo: 100.0,
     m: -1.0,
     k: 3.0,
     b: 1.0,

@@ -14,6 +14,8 @@ extern crate ron;
 extern crate enum_primitive_derive;
 extern crate num_traits;
 
+const NUM_ITEM: usize = 4;
+
 use amethyst::{
     core::transform::TransformBundle,
     prelude::*,
@@ -47,6 +49,7 @@ fn main() -> amethyst::Result<()> {
         .with(SystemSpawnChar::default(), "Character Spawning System", &[])
         .with(SystemSetWorkplace::default(), "Workplace Spawning System", &[])
         .with(SystemAI::default(), "AI System", &[])
+        .with(SystemPrice::default(), "Price System", &[])
         .with_bundle(
             InputBundle::<StringBindings>::new()
                 .with_bindings_from_file(input_config_path)?,

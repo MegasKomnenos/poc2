@@ -2,6 +2,7 @@ use crate::misc::*;
 use crate::component::*;
 use crate::ai::*;
 use crate::asset::*;
+use crate::NUM_ITEM;
 
 use amethyst::{
     core::{ math::{ Vector3, Vector2, Point3, }, Transform, },
@@ -22,6 +23,26 @@ use rand::prelude::*;
 use rand::distributions::WeightedIndex;
 
 #[derive(Default)]
+pub struct SystemPrice;
+impl<'s> System<'s> for SystemPrice {
+    type SystemData = (
+        ReadStorage<'s, ComponentStockpile>,
+        WriteStorage<'s, ComponentPrice>,
+    );
+
+    fn run(&mut self, (stockpiles, mut prices): Self::SystemData) {
+        (&stockpiles, &mut prices).par_join().for_each(|(stockpile, price)| {
+            for i in 1..NUM_ITEM {
+                if price.update[i] {
+                    price.buy[i] = get_price(true, 1, (stockpile.items[0], price.weight[0], price.decay[0]), (stockpile.items[i], price.weight[i], price.decay[i]));
+                    price.sell[i] = get_price(false, 1, (stockpile.items[0], price.weight[0], price.decay[0]), (stockpile.items[i], price.weight[i], price.decay[i]));
+                }
+            }
+        });
+    }
+}
+
+#[derive(Default)]
 pub struct SystemAI;
 impl<'s> System<'s> for SystemAI {
     type SystemData = (
@@ -36,10 +57,11 @@ impl<'s> System<'s> for SystemAI {
         WriteStorage<'s, ComponentWorkplace>,
         WriteStorage<'s, ComponentStockpile>,
         WriteStorage<'s, ComponentMovement>,
+        WriteStorage<'s, ComponentPrice>,
     );
 
-    fn run(&mut self, (entities, workplace_datas, item_datas, axis_datas, mut action_datas, mut agents, mut tilemaps, mut transforms, mut workplaces, mut stockpiles, mut movements): Self::SystemData ) {
-        let mut ai_data = (&entities, workplace_datas, item_datas, axis_datas, tilemaps, transforms, workplaces, stockpiles, movements);
+    fn run(&mut self, (entities, workplace_datas, item_datas, axis_datas, mut action_datas, mut agents, mut tilemaps, mut transforms, mut workplaces, mut stockpiles, mut movements, mut prices): Self::SystemData ) {
+        let mut ai_data = (&entities, workplace_datas, item_datas, axis_datas, tilemaps, transforms, workplaces, stockpiles, movements, prices);
 
         (&entities, &mut agents).par_join().for_each(|(entity, agent)| {
             if agent.current == 255 {
@@ -111,10 +133,12 @@ impl<'s> System<'s> for SystemSetWorkplace {
         WriteStorage<'s, Transform>,
         WriteStorage<'s, SpriteRender>,
         WriteStorage<'s, ComponentWorkplace>,
+        WriteStorage<'s, ComponentPrice>,
+        WriteStorage<'s, ComponentStockpile>,
     );
 
-    fn run(&mut self, (entities, loader, texture_storage, sprite_sheet_storage, active_camera, input, dimensions, cameras, tilemaps, mut transforms, mut sprite_renders, mut workplaces): Self::SystemData) {
-        if input.key_is_down(VirtualKeyCode::F1) || input.key_is_down(VirtualKeyCode::F2) || input.key_is_down(VirtualKeyCode::F3) {
+    fn run(&mut self, (entities, loader, texture_storage, sprite_sheet_storage, active_camera, input, dimensions, cameras, tilemaps, mut transforms, mut sprite_renders, mut workplaces, mut prices, mut stockpiles): Self::SystemData) {
+        if input.key_is_down(VirtualKeyCode::F1) || input.key_is_down(VirtualKeyCode::F2) || input.key_is_down(VirtualKeyCode::F3) || input.key_is_down(VirtualKeyCode::F4) {
             if let Some(mouse_position) = input.mouse_position() {
                 let mut camera_join = (&cameras, &transforms).join();
                 if let Some((camera, camera_transform)) = active_camera
@@ -205,6 +229,46 @@ impl<'s> System<'s> for SystemSetWorkplace {
                                 &mut workplaces
                             )
                             .build();
+                    } else if input.key_is_down(VirtualKeyCode::F4) {
+                        entities
+                            .build_entity()
+                            .with(
+                                SpriteRender { 
+                                    sprite_sheet: load_sprite_sheet_system(
+                                        &loader, &texture_storage, &sprite_sheet_storage, 
+                                        "texture/tile_sprites.png", "texture/tile_sprites.ron"
+                                    ), 
+                                    sprite_number: 7,
+                                },
+                                &mut sprite_renders,
+                            )
+                            .with(
+                                Transform::from(Vector3::new(coord[0], coord[1], 0.0)),
+                                &mut transforms,
+                            )
+                            .with(
+                                ComponentWorkplace {
+                                    variant: 3,
+                                },
+                                &mut workplaces
+                            )
+                            .with(
+                                ComponentPrice {
+                                    update: [true; NUM_ITEM],
+                                    buy: [0; NUM_ITEM],
+                                    sell: [0; NUM_ITEM],
+                                    weight: [0.005, 1.0, 1.0, 1.0],
+                                    decay: [0.9, 0.5, 0.5, 0.5],
+                                },
+                                &mut prices
+                            )
+                            .with(
+                                ComponentStockpile {
+                                    items: [10000, 50, 50, 50],
+                                },
+                                &mut stockpiles
+                            )
+                            .build();
                     }
                 }
             }
@@ -229,11 +293,12 @@ impl<'s> System<'s> for SystemSpawnChar {
         WriteStorage<'s, SpriteRender>,
         WriteStorage<'s, ComponentAgent>,
         WriteStorage<'s, ComponentStockpile>,
+        WriteStorage<'s, ComponentPrice>,
     );
 
     fn run(&mut self, (
         entities, loader, texture_storage, sprite_sheet_storage, active_camera, input, dimensions, cameras, 
-        mut movements, mut transforms, mut sprite_renders, mut agents, mut stockpiles): Self::SystemData
+        mut movements, mut transforms, mut sprite_renders, mut agents, mut stockpiles, mut prices): Self::SystemData
     ) {
         if input.key_is_down(VirtualKeyCode::G) {
             if let Some(mouse_position) = input.mouse_position() {
@@ -249,13 +314,41 @@ impl<'s> System<'s> for SystemSpawnChar {
                             Vector2::new(dimensions.width(), dimensions.height()),
                             camera_transform,
                         );
-                    
-                    let mut actions = [255; 23];
 
+                    let mut actions = [255; 23];
+                    let mut items = [1; NUM_ITEM];
+                    let mut weight = [1.0; NUM_ITEM];
+                    let mut decay = [0.5; NUM_ITEM];
+                    
                     actions[0] = 0;
-                    actions[1] = 1;
-                    actions[2] = 2;
-                    actions[3] = 3;
+                    items[0] = 1000;
+                    weight[0] = 0.005;
+                    decay[0] = 0.9;
+
+                    if input.key_is_down(VirtualKeyCode::Key1) {
+                        actions[1] = 1;
+                        actions[2] = 6;
+                        actions[3] = 7;
+
+                        items[1] = 50;
+                        items[3] = 100;
+                    } else if input.key_is_down(VirtualKeyCode::Key2) {
+                        actions[1] = 2;
+                        actions[2] = 4;
+                        actions[3] = 8;
+
+                        items[1] = 100;
+                        items[2] = 50;
+                    } else if input.key_is_down(VirtualKeyCode::Key3) {
+                        actions[1] = 3;
+                        actions[2] = 5;
+                        actions[3] = 9;
+
+                        items[2] = 100;
+                        items[3] = 50;
+                    } else {
+                        return;
+                    }
 
                     entities
                         .build_entity()
@@ -293,9 +386,19 @@ impl<'s> System<'s> for SystemSpawnChar {
                         )
                         .with(
                             ComponentStockpile {
-                                items: [0; 3],
+                                items: items,
                             },
                             &mut stockpiles
+                        )
+                        .with(
+                            ComponentPrice {
+                                update: [true; NUM_ITEM],
+                                buy: [0; NUM_ITEM],
+                                sell: [0; NUM_ITEM],
+                                weight: weight,
+                                decay: decay,
+                            },
+                            &mut prices
                         )
                         .build();
                 }

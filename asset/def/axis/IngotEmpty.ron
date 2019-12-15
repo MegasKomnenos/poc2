@@ -3,7 +3,7 @@
     name: "Ingot Empty",
     curve: Quadratic,
     input: MyStockpileIngot,
-    foo: 50.0,
+    foo: 100.0,
     m: -1.0,
     k: 3.0,
     b: 1.0,

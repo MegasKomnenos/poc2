@@ -216,3 +216,37 @@ pub fn get_targets(start: &Point3<u32>, goal: &Point3<u32>, tilemap: &TileMap<Mi
 
     out
 }
+
+pub fn get_indiff(k: f32, x: u16, a0: f32, a1: f32, p0: f32, p1: f32) -> u16 {
+    return ((k - (a0 * x as f32).powf(p0)).powf(1.0 / p1) / a1).ceil() as u16;
+}
+pub fn get_util(x: u16, a: f32, p: f32) -> f32 {
+    return (x as f32 * a).powf(p);
+}
+
+pub fn get_price(buying: bool, amount: u16, currency: (u16, f32, f32), item: (u16, f32, f32)) -> u16 {
+    let k = get_util(currency.0, currency.1, currency.2) + get_util(item.0, item.1, item.2);
+
+    if buying {
+        return currency.0 - get_indiff(k, item.0 + amount, item.1, currency.1, item.2, currency.2);
+    } else {
+        return get_indiff(k, item.0 - amount, item.1, currency.1, item.2, currency.2) - currency.0;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_util() {
+        assert!(get_util(2, 5.551, 0.766) <= 6.32087696336 + 0.001 || get_util(2, 5.551, 0.766) >= 6.32087696336 - 0.001);
+        assert!(get_util(4, 9.7331254, 0.586978216) <= 8.57982999635 + 0.001 || get_util(4, 9.7331254, 0.586978216) >= 8.57982999635 - 0.001);
+    }
+
+    #[test]
+    fn test_indiff() {
+        assert_eq!(get_indiff(5.0, 2, 5.0, 1.0, 0.5, 0.5), 4);
+        assert_eq!(get_indiff(3.5, 3, 5.5, 1.9, 0.4, 0.6), 1);
+    }
+}

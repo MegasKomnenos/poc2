@@ -1,8 +1,8 @@
 #![enable(implicit_some)]
 (
-    name: "Ingot Full",
+    name: "Tools Full",
     curve: Quadratic,
-    input: MyStockpileIngot,
+    input: MyStockpileTools,
     foo: 100.0,
     m: 1.0,
     k: 3.0,

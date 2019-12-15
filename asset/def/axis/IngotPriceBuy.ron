@@ -1,0 +1,11 @@
+#![enable(implicit_some)]
+(
+    name: "Ingot Price Buy",
+    curve: Quadratic,
+    input: PriceDiffBuyIngot,
+    foo: 5.0,
+    m: 1.494,
+    k: 1.8,
+    b: 0.0,
+    c: 0.2,
+)

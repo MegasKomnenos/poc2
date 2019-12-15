@@ -3,10 +3,12 @@
     name: "Smithy",
     inputs: [
         0,
+        0,
         1,
         0,
     ],
     outs: [
+        0,
         0,
         0,
         1,
