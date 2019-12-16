@@ -4,6 +4,7 @@ mod system;
 mod component;
 mod asset;
 mod ai;
+mod map;
 
 use crate::misc::*;
 use crate::state::*;
@@ -11,10 +12,10 @@ use crate::system::*;
 
 extern crate rand;
 extern crate ron;
-extern crate enum_primitive_derive;
-extern crate num_traits;
+extern crate voronoi;
 
 const NUM_ITEM: usize = 4;
+const MAP_SIZE: u32 = 100;
 
 use amethyst::{
     core::transform::TransformBundle,

@@ -2,7 +2,8 @@ use crate::misc::*;
 use crate::asset::*;
 use crate::ai::*;
 use crate::component::*;
-use crate::NUM_ITEM;
+use crate::map::*;
+use crate::{ NUM_ITEM, MAP_SIZE };
 
 use amethyst::{
     prelude::*,
@@ -31,10 +32,12 @@ impl SimpleState for PocLoad {
             load_sprite_sheet(data.world, "texture/tile_sprites.png", "texture/tile_sprites.ron");
 
         let mut map = TileMap::<MiscTile, MortonEncoder2D>::new(
-            Vector3::new(100, 100, 1),
+            Vector3::new(MAP_SIZE, MAP_SIZE, 1),
             Vector3::new(1, 1, 1),
             Some(map_sprite_sheet_handle),
         );
+
+        gen_map(&mut map);
 
         data.world
             .create_entity()
