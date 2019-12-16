@@ -1,4 +1,5 @@
 use amethyst::{
+    prelude::*,
     core::{ math::{ Point3, Vector2, Vector3 }, Transform, },
     ecs::{ World, WorldExt, Join, SystemData, Entities, Read, ReadExpect, ReadStorage, },
     assets::{ Loader, AssetStorage, },
@@ -7,6 +8,9 @@ use amethyst::{
         camera::{ ActiveCamera, Camera, },
         sprite::{SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
         Texture,
+    },
+    ui::{
+        Anchor, TtfFormat, UiText, UiTransform
     },
     window::ScreenDimensions,
 };
@@ -116,6 +120,29 @@ impl DrawTiles2DBounds for MiscTileBounds {
             Region::empty()
         }
     }
+}
+
+pub fn load_ui(world: &mut World) {
+    let font = world.read_resource::<Loader>().load(
+        "font/square.ttf",
+        TtfFormat,
+        (),
+        &world.read_resource(),
+    );
+    let transform = UiTransform::new(
+        "Time".to_string(), Anchor::TopMiddle, Anchor::TopMiddle,
+        0., 0., 1., 200., 50.,
+    );
+
+    world
+        .create_entity()
+        .with(transform)
+        .with(UiText::new(
+            font.clone(),
+            "0".to_string(),
+            [1., 1., 1., 1.],
+            50.,
+        )).build();
 }
 
 pub fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> SpriteSheetHandle {

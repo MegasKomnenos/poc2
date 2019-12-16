@@ -25,6 +25,9 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
+    ui::{
+        RenderUi, UiBundle,
+    },
     utils::application_root_dir,
 };
 use amethyst_tiles::{
@@ -55,6 +58,7 @@ fn main() -> amethyst::Result<()> {
             InputBundle::<StringBindings>::new()
                 .with_bindings_from_file(input_config_path)?,
         )?
+        .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -63,9 +67,10 @@ fn main() -> amethyst::Result<()> {
                 )
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderTiles2D::<MiscTile, MortonEncoder2D, MiscTileBounds>::default())
+                .with_plugin(RenderUi::default())
         )?
-        .with_bundle(TransformBundle::new())?;
-
+        .with_bundle(UiBundle::<StringBindings>::new())?;
+        
     let mut game = Application::new(asset_dir, PocLoad::default(), game_data)?;
     game.run();
 

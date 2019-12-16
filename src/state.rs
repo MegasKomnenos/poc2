@@ -26,7 +26,7 @@ pub struct PocLoad;
 impl SimpleState for PocLoad {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         data.world.insert(MiscTime::default());
-        
+
         let map_sprite_sheet_handle =
             load_sprite_sheet(data.world, "texture/tile_sprites.png", "texture/tile_sprites.ron");
 
@@ -52,6 +52,8 @@ impl SimpleState for PocLoad {
             .with(Transform::from(Vector3::new(0.0, 0.0, 0.1)))
             .with(Camera::standard_2d(width, height))
             .build();
+        
+        load_ui(data.world);
         
         let path = application_root_dir().unwrap().join("asset");
         

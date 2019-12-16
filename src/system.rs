@@ -14,6 +14,9 @@ use amethyst::{
         sprite::{ SpriteRender, SpriteSheet, },
         camera::{ ActiveCamera, Camera, },
     },
+    ui::{
+        UiFinder, UiText
+    },
     window::ScreenDimensions,
     winit,
 };
@@ -25,9 +28,13 @@ use rand::distributions::WeightedIndex;
 #[derive(Default)]
 pub struct SystemTime;
 impl<'s> System<'s> for SystemTime {
-    type SystemData = Write<'s, MiscTime>;
+    type SystemData = (
+        UiFinder<'s>,
+        WriteStorage<'s, UiText>,
+        Write<'s, MiscTime>
+    );
 
-    fn run(&mut self, mut time: Self::SystemData) {
+    fn run(&mut self, (ui_finder, mut ui_texts, mut time): Self::SystemData) {
         time.scnd += 1;
 
         if time.scnd >= 60 {
@@ -58,7 +65,15 @@ impl<'s> System<'s> for SystemTime {
                 }
             }
 
-            println!("{} {}", time.hour, time.mnt);
+            let mut am: String;
+
+            if time.am {
+                am = "AM".to_string();
+            } else {
+                am = "PM".to_string();
+            }
+
+            ui_texts.get_mut(ui_finder.find("Time").unwrap()).unwrap().text = format!("{}|{}|{}", am, time.hour, time.mnt);
         }
     }
 }
