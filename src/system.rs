@@ -26,6 +26,35 @@ use rand::prelude::*;
 use rand::distributions::WeightedIndex;
 
 #[derive(Default)]
+pub struct SystemMapMode;
+impl<'s> System<'s> for SystemMapMode {
+    type SystemData = (
+        Read<'s, InputHandler<StringBindings>>,
+        Write<'s, MiscMapMode>,
+    );
+
+    fn run(&mut self, (input, mut mapmode): Self::SystemData) {
+        if input.key_is_down(VirtualKeyCode::Key1) {
+            *mapmode = MiscMapMode::Terrain;
+        } else if input.key_is_down(VirtualKeyCode::Key2) {
+            *mapmode = MiscMapMode::Nothing;
+        } else if input.key_is_down(VirtualKeyCode::Key3) {
+            *mapmode = MiscMapMode::Crop;
+        } else if input.key_is_down(VirtualKeyCode::Key4) {
+            *mapmode = MiscMapMode::Amethyst;
+        } else if input.key_is_down(VirtualKeyCode::Key5) {
+            *mapmode = MiscMapMode::Gold;
+        } else if input.key_is_down(VirtualKeyCode::Key6) {
+            *mapmode = MiscMapMode::Metal;
+        } else if input.key_is_down(VirtualKeyCode::Key7) {
+            *mapmode = MiscMapMode::Stone;
+        } else if input.key_is_down(VirtualKeyCode::Key8) {
+            *mapmode = MiscMapMode::Coal;
+        }
+    }
+}
+
+#[derive(Default)]
 pub struct SystemTime;
 impl<'s> System<'s> for SystemTime {
     type SystemData = (

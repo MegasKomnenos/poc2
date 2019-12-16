@@ -16,6 +16,23 @@ use amethyst::{
 };
 use amethyst_tiles::{ Tile, TileMap, CoordinateEncoder, MortonEncoder2D, MapStorage, Map, DrawTiles2DBounds, Region, };
 use pathfinding::prelude::{ astar, absdiff };
+use std::ops::Deref;
+
+pub enum MiscMapMode {
+    Terrain,
+    Nothing,
+    Crop,
+    Amethyst,
+    Gold,
+    Metal,
+    Stone,
+    Coal,
+}
+impl Default for MiscMapMode {
+    fn default() -> Self {
+        MiscMapMode::Terrain
+    }
+}
 
 pub struct MiscTime {
     pub year: u16,
@@ -42,11 +59,65 @@ impl Default for MiscTime {
 
 #[derive(Default, Clone)]
 pub struct MiscTile {
-    pub terrain: usize,
+    pub terrain: u8,
+    pub resource: u8,
 }
 impl Tile for MiscTile {
-    fn sprite(&self, _: Point3<u32>, _: &World) -> Option<usize> {
-        Some(self.terrain)
+    fn sprite(&self, _: Point3<u32>, world: &World) -> Option<usize> {
+        match world.read_resource::<MiscMapMode>().deref() {
+            MiscMapMode::Terrain => {
+                Some(self.terrain as usize)
+            }
+            MiscMapMode::Nothing => {
+                if self.resource == 0 {
+                    Some(8)
+                } else {
+                    Some(9)
+                }
+            }
+            MiscMapMode::Crop => {
+                if self.resource == 1 {
+                    Some(8)
+                } else {
+                    Some(9)
+                }
+            }
+            MiscMapMode::Amethyst => {
+                if self.resource == 2 {
+                    Some(8)
+                } else {
+                    Some(9)
+                }
+            }
+            MiscMapMode::Gold => {
+                if self.resource == 3 {
+                    Some(8)
+                } else {
+                    Some(9)
+                }
+            }
+            MiscMapMode::Metal => {
+                if self.resource == 4 {
+                    Some(8)
+                } else {
+                    Some(9)
+                }
+            }
+            MiscMapMode::Stone => {
+                if self.resource == 5 {
+                    Some(8)
+                } else {
+                    Some(9)
+                }
+            }
+            MiscMapMode::Coal => {
+                if self.resource == 6 {
+                    Some(8)
+                } else {
+                    Some(9)
+                }
+            }
+        }
     }
 }
 

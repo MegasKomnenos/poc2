@@ -6,6 +6,8 @@ use amethyst::core::math::Point3;
 use amethyst_tiles::{TileMap, MapStorage, MortonEncoder2D, Map};
 use rand::Rng;
 use voronoi::{voronoi, Point, lloyd_relaxation, DCEL, make_polygons};
+use noise::{ NoiseFn, Perlin, Seedable };
+use std::cmp::Ordering;
 
 type Segment = [Point; 2];
 
@@ -14,7 +16,7 @@ pub fn gen_map(tiles: &mut TileMap<MiscTile, MortonEncoder2D>) {
     let mut vor_pts = Vec::<Point>::new();
     let map_size = MAP_SIZE as f64;
 
-    for _ in 0..100 {
+    for _ in 0..(50 + MAP_SIZE / 2) {
         vor_pts.push(Point::new(rng.gen::<f64>() * map_size, rng.gen::<f64>() * map_size))
     }
 
@@ -42,6 +44,9 @@ pub fn gen_map(tiles: &mut TileMap<MiscTile, MortonEncoder2D>) {
             }
         }
     }
+
+    let perlin = Perlin::new().set_seed(rng.gen::<u32>());
+    let resources = [(0.0, 40.0), (1.0, 10.0), (21.0, 1.0), (31.0, 1.0), (41.0, 5.0), (51.0, 5.0), (61.0, 5.0)];
 
     for y in 0..MAP_SIZE as usize {
         for x in 0..MAP_SIZE as usize {
@@ -74,6 +79,14 @@ pub fn gen_map(tiles: &mut TileMap<MiscTile, MortonEncoder2D>) {
                     break;
                 }
             }
+
+            tile.resource = resources
+                .iter()
+                .map(|(a, b)| perlin.get([x as f64 / 12.3456789, y as f64 / 12.3456789, *a]) * b)
+                .enumerate()
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(Ordering::Equal))
+                .map(|(i, _)| i)
+                .unwrap() as u8;
         }
     }
 }

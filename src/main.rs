@@ -13,9 +13,10 @@ use crate::system::*;
 extern crate rand;
 extern crate ron;
 extern crate voronoi;
+extern crate noise;
 
 const NUM_ITEM: usize = 4;
-const MAP_SIZE: u32 = 100;
+const MAP_SIZE: u32 = 200;
 
 use amethyst::{
     core::transform::TransformBundle,
@@ -52,6 +53,7 @@ fn main() -> amethyst::Result<()> {
         .with(SystemMovement::default(), "Character Movement System", &[])
         .with(SystemSpawnChar::default(), "Character Spawning System", &[])
         .with(SystemSetWorkplace::default(), "Workplace Spawning System", &[])
+        .with(SystemMapMode::default(), "Mapmode System", &[])
         .with(SystemTime::default(), "Time System", &[])
         .with(SystemAI::default(), "AI System", &[])
         .with(SystemPrice::default(), "Price System", &[])
