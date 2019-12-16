@@ -13,6 +13,29 @@ use amethyst::{
 use amethyst_tiles::{ Tile, TileMap, CoordinateEncoder, MortonEncoder2D, MapStorage, Map, DrawTiles2DBounds, Region, };
 use pathfinding::prelude::{ astar, absdiff };
 
+pub struct MiscTime {
+    pub year: u16,
+    pub month: u8,
+    pub day: u8,
+    pub hour: u8,
+    pub mnt: u8,
+    pub scnd: u8,
+    pub am: bool,
+}
+impl Default for MiscTime {
+    fn default() -> Self {
+        MiscTime {
+            year: 0,
+            month: 9,
+            day: 1,
+            hour: 6,
+            mnt: 0,
+            scnd: 0,
+            am: true,
+        }
+    }
+}
+
 #[derive(Default, Clone)]
 pub struct MiscTile {
     pub terrain: usize,

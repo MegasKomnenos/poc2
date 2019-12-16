@@ -48,6 +48,7 @@ fn main() -> amethyst::Result<()> {
         .with(SystemMovement::default(), "Character Movement System", &[])
         .with(SystemSpawnChar::default(), "Character Spawning System", &[])
         .with(SystemSetWorkplace::default(), "Workplace Spawning System", &[])
+        .with(SystemTime::default(), "Time System", &[])
         .with(SystemAI::default(), "AI System", &[])
         .with(SystemPrice::default(), "Price System", &[])
         .with_bundle(

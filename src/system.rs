@@ -23,6 +23,47 @@ use rand::prelude::*;
 use rand::distributions::WeightedIndex;
 
 #[derive(Default)]
+pub struct SystemTime;
+impl<'s> System<'s> for SystemTime {
+    type SystemData = Write<'s, MiscTime>;
+
+    fn run(&mut self, mut time: Self::SystemData) {
+        time.scnd += 1;
+
+        if time.scnd >= 60 {
+            time.scnd = 0;
+            time.mnt += 1;
+
+            if time.mnt >= 60 {
+                time.mnt = 0;
+                time.hour += 1;
+
+                if time.hour >= 12 {
+                    time.hour = 0;
+                    time.am = !time.am;
+        
+                    if time.am {
+                        time.day += 1;
+
+                        if time.day >= 31 {
+                            time.day = 1;
+                            time.month += 1;
+
+                            if time.month >= 5 {
+                                time.year += 1;
+                                time.month = 1;
+                            }
+                        }
+                    }
+                }
+            }
+
+            println!("{} {}", time.hour, time.mnt);
+        }
+    }
+}
+
+#[derive(Default)]
 pub struct SystemPrice;
 impl<'s> System<'s> for SystemPrice {
     type SystemData = (
