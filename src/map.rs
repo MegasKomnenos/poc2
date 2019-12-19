@@ -149,7 +149,7 @@ pub fn gen_map(tiles: &mut TileMap<MiscTile, MortonEncoder2D>) {
     }
 
     let perlin = Perlin::new().set_seed(rng.gen::<u32>());
-    let resources = [(0.0, 40.0), (1.0, 10.0), (21.0, 1.0), (31.0, 1.0), (41.0, 5.0), (51.0, 5.0), (61.0, 5.0)];
+    let resources = [(0.0, 12.0), (0.2, 6.0), (0.4, 4.5), (0.6, 4.0), (0.8, 4.0), (1.0, 3.5)];
 
     for y in 0..MAP_SIZE as usize {
         for x in 0..MAP_SIZE as usize {
@@ -241,7 +241,7 @@ pub fn gen_map(tiles: &mut TileMap<MiscTile, MortonEncoder2D>) {
 
             tile.resource = resources
                 .iter()
-                .map(|(a, b)| perlin.get([x as f64 / 12.3456789, y as f64 / 12.3456789, *a]) * b)
+                .map(|(a, b)| (perlin.get([x as f64 / 12.3456789, y as f64 / 12.3456789, *a]) + 0.8660254) * b)
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(Ordering::Equal))
                 .map(|(i, _)| i)

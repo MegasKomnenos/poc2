@@ -39,16 +39,14 @@ impl<'s> System<'s> for SystemMapMode {
         } else if input.key_is_down(VirtualKeyCode::Key2) {
             *mapmode = MiscMapMode::Nothing;
         } else if input.key_is_down(VirtualKeyCode::Key3) {
-            *mapmode = MiscMapMode::Crop;
-        } else if input.key_is_down(VirtualKeyCode::Key4) {
             *mapmode = MiscMapMode::Amethyst;
-        } else if input.key_is_down(VirtualKeyCode::Key5) {
+        } else if input.key_is_down(VirtualKeyCode::Key4) {
             *mapmode = MiscMapMode::Gold;
-        } else if input.key_is_down(VirtualKeyCode::Key6) {
+        } else if input.key_is_down(VirtualKeyCode::Key5) {
             *mapmode = MiscMapMode::Metal;
-        } else if input.key_is_down(VirtualKeyCode::Key7) {
+        } else if input.key_is_down(VirtualKeyCode::Key6) {
             *mapmode = MiscMapMode::Stone;
-        } else if input.key_is_down(VirtualKeyCode::Key8) {
+        } else if input.key_is_down(VirtualKeyCode::Key7) {
             *mapmode = MiscMapMode::Coal;
         }
     }

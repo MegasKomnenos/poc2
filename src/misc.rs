@@ -21,7 +21,6 @@ use std::ops::Deref;
 pub enum MiscMapMode {
     Terrain,
     Nothing,
-    Crop,
     Amethyst,
     Gold,
     Metal,
@@ -75,43 +74,36 @@ impl Tile for MiscTile {
                     Some(5)
                 }
             }
-            MiscMapMode::Crop => {
+            MiscMapMode::Amethyst => {
                 if self.resource == 1 {
                     Some(4)
                 } else {
                     Some(5)
                 }
             }
-            MiscMapMode::Amethyst => {
+            MiscMapMode::Gold => {
                 if self.resource == 2 {
                     Some(4)
                 } else {
                     Some(5)
                 }
             }
-            MiscMapMode::Gold => {
+            MiscMapMode::Metal => {
                 if self.resource == 3 {
                     Some(4)
                 } else {
                     Some(5)
                 }
             }
-            MiscMapMode::Metal => {
+            MiscMapMode::Stone => {
                 if self.resource == 4 {
                     Some(4)
                 } else {
                     Some(5)
                 }
             }
-            MiscMapMode::Stone => {
-                if self.resource == 5 {
-                    Some(4)
-                } else {
-                    Some(5)
-                }
-            }
             MiscMapMode::Coal => {
-                if self.resource == 6 {
+                if self.resource == 5 {
                     Some(4)
                 } else {
                     Some(5)
