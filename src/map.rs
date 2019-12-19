@@ -149,7 +149,7 @@ pub fn gen_map(tiles: &mut TileMap<MiscTile, MortonEncoder2D>) {
     }
 
     let perlin = Perlin::new().set_seed(rng.gen::<u32>());
-    let resources = [(0.0, 12.0), (0.2, 6.0), (0.4, 4.5), (0.6, 4.0), (0.8, 4.0), (1.0, 3.5)];
+    let resources = [(0.0, 16.0), (0.2, 6.0), (0.4, 4.0), (0.6, 4.0), (0.8, 4.0), (1.0, 3.5)];
 
     for y in 0..MAP_SIZE as usize {
         for x in 0..MAP_SIZE as usize {
