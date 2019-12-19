@@ -70,51 +70,51 @@ impl Tile for MiscTile {
             }
             MiscMapMode::Nothing => {
                 if self.resource == 0 {
-                    Some(8)
+                    Some(4)
                 } else {
-                    Some(9)
+                    Some(5)
                 }
             }
             MiscMapMode::Crop => {
                 if self.resource == 1 {
-                    Some(8)
+                    Some(4)
                 } else {
-                    Some(9)
+                    Some(5)
                 }
             }
             MiscMapMode::Amethyst => {
                 if self.resource == 2 {
-                    Some(8)
+                    Some(4)
                 } else {
-                    Some(9)
+                    Some(5)
                 }
             }
             MiscMapMode::Gold => {
                 if self.resource == 3 {
-                    Some(8)
+                    Some(4)
                 } else {
-                    Some(9)
+                    Some(5)
                 }
             }
             MiscMapMode::Metal => {
                 if self.resource == 4 {
-                    Some(8)
+                    Some(4)
                 } else {
-                    Some(9)
+                    Some(5)
                 }
             }
             MiscMapMode::Stone => {
                 if self.resource == 5 {
-                    Some(8)
+                    Some(4)
                 } else {
-                    Some(9)
+                    Some(5)
                 }
             }
             MiscMapMode::Coal => {
                 if self.resource == 6 {
-                    Some(8)
+                    Some(4)
                 } else {
-                    Some(9)
+                    Some(5)
                 }
             }
         }
