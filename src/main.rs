@@ -49,10 +49,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(SystemCameraMovement::default(), "Camera Movement System", &[])
-        .with(SystemColorMap::default(), "Map Coloring System", &[])
         .with(SystemMovement::default(), "Character Movement System", &[])
-        .with(SystemSpawnChar::default(), "Character Spawning System", &[])
-        .with(SystemSetWorkplace::default(), "Workplace Spawning System", &[])
         .with(SystemMapMode::default(), "Mapmode System", &[])
         .with(SystemTime::default(), "Time System", &[])
         .with(SystemAI::default(), "AI System", &[])
@@ -61,6 +58,7 @@ fn main() -> amethyst::Result<()> {
             InputBundle::<StringBindings>::new()
                 .with_bindings_from_file(input_config_path)?,
         )?
+        .with_system_desc(SystemMovementPlayerDesc::default(), "Player Movement System", &["input_system"])
         .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()

@@ -251,56 +251,56 @@ pub fn get_targets(start: &Point3<u32>, goal: &Point3<u32>, tilemap: &TileMap<Mi
             if node[0] >= 1 {
                 let point = Point3::new(node[0] - 1, node[1], node[2]);
 
-                if tilemap.get(&point).unwrap().terrain == 0 {
+                if tilemap.get(&point).unwrap().terrain == 0 || tilemap.get(&point).unwrap().terrain == 3 {
                     out.push((point, 1));
                 }
             }
             if node[0] + 1 < dimensions[0] {
                 let point = Point3::new(node[0] + 1, node[1], node[2]);
 
-                if tilemap.get(&point).unwrap().terrain == 0 {
+                if tilemap.get(&point).unwrap().terrain == 0 || tilemap.get(&point).unwrap().terrain == 3 {
                     out.push((point, 1));
                 }
             }
             if node[1] >= 1 {
                 let point = Point3::new(node[0], node[1] - 1, node[2]);
 
-                if tilemap.get(&point).unwrap().terrain == 0 {
+                if tilemap.get(&point).unwrap().terrain == 0 || tilemap.get(&point).unwrap().terrain == 3 {
                     out.push((point, 1));
                 }
             }
             if node[1] + 1 < dimensions[1] {
                 let point = Point3::new(node[0], node[1] + 1, node[2]);
 
-                if tilemap.get(&point).unwrap().terrain == 0 {
+                if tilemap.get(&point).unwrap().terrain == 0 || tilemap.get(&point).unwrap().terrain == 3 {
                     out.push((point, 1));
                 }
             }
             if node[0] >= 1 && node[1] >= 1 {
                 let point = Point3::new(node[0] - 1, node[1] - 1, node[2]);
 
-                if tilemap.get(&point).unwrap().terrain == 0 {
+                if tilemap.get(&point).unwrap().terrain == 0 || tilemap.get(&point).unwrap().terrain == 3 {
                     out.push((point, 1));
                 }
             }
             if node[0] + 1 < dimensions[0] && node[1] >= 1 {
                 let point = Point3::new(node[0] + 1, node[1] - 1, node[2]);
 
-                if tilemap.get(&point).unwrap().terrain == 0 {
+                if tilemap.get(&point).unwrap().terrain == 0 || tilemap.get(&point).unwrap().terrain == 3 {
                     out.push((point, 1));
                 }
             }
             if node[0] + 1 < dimensions[0] && node[1] + 1 < dimensions[1] {
                 let point = Point3::new(node[0] + 1, node[1] + 1, node[2]);
 
-                if tilemap.get(&point).unwrap().terrain == 0 {
+                if tilemap.get(&point).unwrap().terrain == 0 || tilemap.get(&point).unwrap().terrain == 3 {
                     out.push((point, 1));
                 }
             }
             if node[0] >= 1 && node[1] + 1 < dimensions[1] {
                 let point = Point3::new(node[0] - 1, node[1] + 1, node[2]);
 
-                if tilemap.get(&point).unwrap().terrain == 0 {
+                if tilemap.get(&point).unwrap().terrain == 0 || tilemap.get(&point).unwrap().terrain == 3 {
                     out.push((point, 1));
                 }
             }

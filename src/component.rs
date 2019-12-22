@@ -50,3 +50,8 @@ pub struct ComponentMovement {
 impl Component for ComponentMovement {
     type Storage = DenseVecStorage<Self>;
 }
+
+pub struct ComponentPlayerControlled;
+impl Component for ComponentPlayerControlled {
+    type Storage = DenseVecStorage<Self>;
+}

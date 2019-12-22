@@ -10,7 +10,7 @@ use amethyst::{
     core::{ math::Vector3, Transform },
     ecs::Join,
     input::{ is_close_requested, is_key_down, },
-    renderer::camera::Camera,
+    renderer::{ camera::Camera, SpriteRender },
     window::ScreenDimensions,
     winit,
     utils::application_root_dir,
@@ -29,8 +29,9 @@ impl SimpleState for PocLoad {
         data.world.insert(MiscTime::default());
         data.world.insert(MiscMapMode::default());
 
-        let map_sprite_sheet_handle =
-            load_sprite_sheet(data.world, "texture/tile_sprites.png", "texture/tile_sprites.ron");
+        let map_sprite_sheet_handle = load_sprite_sheet(data.world, "texture/tile_sprites.png", "texture/tile_sprites.ron");
+        let character_sprite_sheet_handle = load_sprite_sheet(data.world, "texture/character_sprites.png", "texture/character_sprites.ron");
+
 
         let mut map = TileMap::<MiscTile, MortonEncoder2D>::new(
             Vector3::new(MAP_SIZE, MAP_SIZE, 1),
@@ -55,6 +56,27 @@ impl SimpleState for PocLoad {
             .create_entity()
             .with(Transform::from(Vector3::new(0.0, 0.0, 0.1)))
             .with(Camera::standard_2d(width, height))
+            .build();
+        data.world
+            .create_entity()
+            .with(
+                SpriteRender { 
+                    sprite_sheet: character_sprite_sheet_handle,
+                    sprite_number: 0,
+                },
+            )
+            .with(
+                Transform::from(Vector3::new(0.0, 0.0, 0.0)),
+            )
+            .with(
+                ComponentMovement { 
+                    targets: Vec::new(), 
+                    velocity: Vector3::new(0.0, 0.0, 0.0),
+                    speed_limit: 0.1, 
+                    acceleration: 0.05, 
+                },
+            )
+            .with(ComponentPlayerControlled)
             .build();
         
         load_ui(data.world);
