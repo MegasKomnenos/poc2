@@ -1,43 +1,8 @@
-(
+#![enable(implicit_some)]
+
+Grid((
     texture_width: 6,
     texture_height: 1,
-
-    sprites: [
-        (
-            x: 0,
-            y: 0,
-            width: 1,
-            height: 1,
-        ),
-        (
-            x: 1,
-            y: 0,
-            width: 1,
-            height: 1,
-        ),
-        (
-            x: 2,
-            y: 0,
-            width: 1,
-            height: 1,
-        ),
-        (
-            x: 3,
-            y: 0,
-            width: 1,
-            height: 1,
-        ),
-        (
-            x: 4,
-            y: 0,
-            width: 1,
-            height: 1,
-        ),
-        (
-            x: 5,
-            y: 0,
-            width: 1,
-            height: 1,
-        ),
-    ],
-)
+    columns: 6,
+    rows: 1,
+))

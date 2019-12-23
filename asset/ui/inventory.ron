@@ -1,33 +1,33 @@
 #![enable(implicit_some)]
 Container(
     transform: (
-        id: "background",
-        anchor: Middle,
-        stretch: XY( x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
-        width: 20.,
-        height: 20.,
+        id: "inventory",
+        x: -100.,
+        anchor: MiddleRight,
+        width: 200.,
+        height: 400.,
+        mouse_reactive: true,
+        draggable: true,
     ),
-    background: SolidColor(0.6, 0.6, 1.0, 0.8),
+    background: SolidColor(0.6, 0.6, 1.0, 1.0),
     children: [
-        // Draggable Button
-        Button(
+        Label(
             transform: (
-                id: "draggable_button",
-                x: 250.,
-                y: -120., // -64-16
-                width: 128.,
-                height: 64.,
-                tab_order: 9,
-                anchor: TopLeft,
+                id: "inventory_label",
+                y: -20.,
+                width: 180.,
+                height: 20.,
+                tab_order: 1,
+                anchor: TopMiddle,
                 mouse_reactive: true,
                 draggable: true,
             ),
-            button: (
-                text: "Draggable",
+            text: (
+                text: "Inventory",
                 font: File("font/square.ttf", ("TTF", ())),
                 font_size: 20.,
-                normal_text_color: (0.0, 0.0, 0.0, 1.0),
-                normal_image: SolidColor(0.82, 0.83, 0.83, 1.0),
+                color: (0.2, 0.2, 1.0, 1.0),
+                align: Middle,
             )
         ),
     ],
