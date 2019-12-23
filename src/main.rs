@@ -31,10 +31,10 @@ use amethyst::{
         RenderUi, UiBundle,
     },
     utils::application_root_dir,
-};
-use amethyst_tiles::{
-    MortonEncoder2D, 
-    RenderTiles2D,
+    tiles::{
+        MortonEncoder2D,
+        RenderTiles2D,
+    },
 };
 
 fn main() -> amethyst::Result<()> {
@@ -63,7 +63,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)
+                    RenderToWindow::from_config_path(display_config_path)?
                         .with_clear([0.0, 0.0, 0.0, 1.0]),
                 )
                 .with_plugin(RenderFlat2D::default())

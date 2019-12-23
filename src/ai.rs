@@ -12,8 +12,10 @@ use amethyst::{
     ecs::{
         Entity, Entities, Read, WriteStorage, Join,
     },
+    tiles::{
+        TileMap, Map,
+    },
 };
-use amethyst_tiles::{ TileMap, Map };
 
 use serde::{ Serialize, Deserialize };
 
@@ -199,8 +201,8 @@ impl AIAction for AIActionWorkAtSmithy {
         let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
         let tilemap = (tilemaps).join().next().unwrap();
 
-        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
-        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation(), None).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation(), None).unwrap();
 
         if me_point != target_point {
             let targets = get_targets(&me_point, &target_point, &tilemap);
@@ -305,8 +307,8 @@ impl AIAction for AIActionWorkAtFurnace {
         let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
         let tilemap = (tilemaps).join().next().unwrap();
 
-        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
-        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation(), None).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation(), None).unwrap();
 
         if me_point != target_point {
             let targets = get_targets(&me_point, &target_point, &tilemap);
@@ -411,8 +413,8 @@ impl AIAction for AIActionWorkAtMine {
         let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
         let tilemap = (tilemaps).join().next().unwrap();
 
-        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
-        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation(), None).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation(), None).unwrap();
 
         if me_point != target_point {
             let targets = get_targets(&me_point, &target_point, &tilemap);
@@ -517,8 +519,8 @@ impl AIAction for AIActionBuyOre {
         let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
         let tilemap = (tilemaps).join().next().unwrap();
 
-        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
-        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation(), None).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation(), None).unwrap();
 
         if me_point != target_point {
             let targets = get_targets(&me_point, &target_point, &tilemap);
@@ -607,8 +609,8 @@ impl AIAction for AIActionBuyIngot {
         let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
         let tilemap = (tilemaps).join().next().unwrap();
 
-        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
-        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation(), None).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation(), None).unwrap();
 
         if me_point != target_point {
             let targets = get_targets(&me_point, &target_point, &tilemap);
@@ -697,8 +699,8 @@ impl AIAction for AIActionBuyTools {
         let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
         let tilemap = (tilemaps).join().next().unwrap();
 
-        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
-        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation(), None).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation(), None).unwrap();
 
         if me_point != target_point {
             let targets = get_targets(&me_point, &target_point, &tilemap);
@@ -789,8 +791,8 @@ impl AIAction for AIActionSellOre {
         let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
         let tilemap = (tilemaps).join().next().unwrap();
 
-        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
-        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation(), None).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation(), None).unwrap();
 
         if me_point != target_point {
             let targets = get_targets(&me_point, &target_point, &tilemap);
@@ -881,8 +883,8 @@ impl AIAction for AIActionSellIngot {
         let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
         let tilemap = (tilemaps).join().next().unwrap();
 
-        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
-        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation(), None).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation(), None).unwrap();
 
         if me_point != target_point {
             let targets = get_targets(&me_point, &target_point, &tilemap);
@@ -973,8 +975,8 @@ impl AIAction for AIActionSellTools {
         let (_, _, _, _, tilemaps, transforms, _, _, movements, _) = ai_data;
         let tilemap = (tilemaps).join().next().unwrap();
 
-        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation()).unwrap();
-        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation()).unwrap();
+        let me_point = tilemap.to_tile(transforms.get(*me).unwrap().translation(), None).unwrap();
+        let target_point = tilemap.to_tile(transforms.get(*target).unwrap().translation(), None).unwrap();
 
         if me_point != target_point {
             let targets = get_targets(&me_point, &target_point, &tilemap);

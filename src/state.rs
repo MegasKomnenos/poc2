@@ -13,9 +13,12 @@ use amethyst::{
     renderer::{ camera::Camera, SpriteRender },
     window::ScreenDimensions,
     winit,
+    ui::UiCreator,
     utils::application_root_dir,
+    tiles::{
+        TileMap, MortonEncoder2D,
+    },
 };
-use amethyst_tiles::{ TileMap, MortonEncoder2D, };
 
 use ron::de::from_str;
 use std::fs::read_to_string;
@@ -39,7 +42,7 @@ impl SimpleState for PocLoad {
             Some(map_sprite_sheet_handle),
         );
 
-        gen_map(&mut map);
+        //gen_map(&mut map);
 
         data.world
             .create_entity()
@@ -78,6 +81,8 @@ impl SimpleState for PocLoad {
             )
             .with(ComponentPlayerControlled)
             .build();
+        
+        data.world.exec(|mut creator: UiCreator<'_>| creator.create("ui/inventory.ron", ()));
         
         load_ui(data.world);
         
@@ -164,18 +169,27 @@ impl SimpleState for PocLoad {
 
     fn handle_event(
         &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
+        _: StateData<'_, GameData<'_, '_>>,
         event: StateEvent,
     ) -> SimpleTrans {
-        let StateData { .. } = data;
-        if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
-                Trans::Quit
-            } else {
+        match &event {
+            StateEvent::Window(event) => {
+                if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
+                    Trans::Quit
+                } else {
+                    Trans::None
+                }
+            }
+            StateEvent::Ui(ui_event) => {
+                println!("{:?}", ui_event);
+
                 Trans::None
             }
-        } else {
-            Trans::None
+            StateEvent::Input(input) => {
+                println!("{:?}", input);
+                
+                Trans::None
+            }
         }
     }
 }

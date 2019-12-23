@@ -12,9 +12,11 @@ use amethyst::{
     ui::{
         Anchor, TtfFormat, UiText, UiTransform
     },
+    tiles::{
+        Tile, TileMap, CoordinateEncoder, MortonEncoder2D, MapStorage, Map, DrawTiles2DBounds, Region,
+    },
     window::ScreenDimensions,
 };
-use amethyst_tiles::{ Tile, TileMap, CoordinateEncoder, MortonEncoder2D, MapStorage, Map, DrawTiles2DBounds, Region, };
 use pathfinding::prelude::{ astar, absdiff };
 use std::ops::Deref;
 
@@ -172,10 +174,10 @@ impl DrawTiles2DBounds for MiscTileBounds {
             );
             
             let min = map
-                .to_tile(&top_left)
+                .to_tile(&top_left, None)
                 .unwrap_or_else(|| Point3::new(0, 0, 0));
             let max = map
-                .to_tile(&bottom_right)
+                .to_tile(&bottom_right, None)
                 .unwrap_or_else(|| Point3::new(map.dimensions().x - 1, map.dimensions().y - 1, 0));
                 
             Region::new(min, max)

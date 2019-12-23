@@ -28,8 +28,10 @@ use amethyst::{
     },
     window::ScreenDimensions,
     winit,
+    tiles::{
+        MapStorage, TileMap, Map,
+    },
 };
-use amethyst_tiles::{ MapStorage, TileMap, Map, };
 use rayon::iter::ParallelIterator;
 use rand::prelude::*;
 use rand::distributions::WeightedIndex;
@@ -40,13 +42,11 @@ pub struct SystemMovementPlayer {
     #[system_desc(event_channel_reader)]
     event_reader: ReaderId<InputEvent<StringBindings>>,
 }
-
 impl SystemMovementPlayer {
     pub fn new(event_reader: ReaderId<InputEvent<StringBindings>>) -> Self {
         SystemMovementPlayer { event_reader }
     }
 }
-
 impl<'s> System<'s> for SystemMovementPlayer {
     type SystemData = (
         Entities<'s>,
@@ -81,14 +81,16 @@ impl<'s> System<'s> for SystemMovementPlayer {
                                         camera_transform,
                                     );
                                 
-                                let coord = Vector3::new(coord[0], coord[1], coord[2]);
                                 let tilemap = (&tilemaps).join().next().unwrap();
-                                let (_, transform, mut movement) = (&player, &transforms, &mut movements).join().next().unwrap();
-                                
-                                let start = tilemap.to_tile(transform.translation()).unwrap();
-                                let goal = tilemap.to_tile(&coord).unwrap();
+                                let coord = Vector3::new(coord[0], coord[1], coord[2]);
 
-                                movement.targets = get_targets(&start, &goal, tilemap);
+                                if let Some(goal) = tilemap.to_tile(&coord, None) {
+                                    let (_, transform, mut movement) = (&player, &transforms, &mut movements).join().next().unwrap();
+                                
+                                    let start = tilemap.to_tile(transform.translation(), None).unwrap();
+
+                                    movement.targets = get_targets(&start, &goal, tilemap);
+                                }
                             }
                         }
                     },
@@ -290,8 +292,8 @@ impl<'s> System<'s> for SystemMovement {
                 let transform = transform.get_mut_unchecked();
 
                 for tilemap in (&mut tilemaps).join() {
-                    if let Some(_) = tilemap.to_tile(transform.translation()) {
-                        let mut velocity = tilemap.to_world(movement.targets.last().unwrap()) - transform.translation();
+                    if let Some(_) = tilemap.to_tile(transform.translation(), None) {
+                        let mut velocity = tilemap.to_world(movement.targets.last().unwrap(), None) - transform.translation();
                         let distance = (velocity[0].powf(2.0) + velocity[1].powf(2.0) + velocity[2].powf(2.0)).sqrt();
 
                         if distance > movement.acceleration {

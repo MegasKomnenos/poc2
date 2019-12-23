@@ -2,8 +2,12 @@ use crate::misc::*;
 use crate::component::*;
 use crate::MAP_SIZE;
 
-use amethyst::core::math::Point3;
-use amethyst_tiles::{TileMap, MapStorage, MortonEncoder2D, Map};
+use amethyst::{
+    core::math::Point3,
+    tiles::{
+        TileMap, MapStorage, MortonEncoder2D, Map,
+    },
+};
 use rand::Rng;
 use voronoi::{voronoi, Point, lloyd_relaxation, DCEL, make_polygons};
 use noise::{ NoiseFn, Perlin, Seedable };
