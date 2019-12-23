@@ -19,8 +19,6 @@ Container(
                 height: 20.,
                 tab_order: 1,
                 anchor: TopMiddle,
-                mouse_reactive: true,
-                draggable: true,
             ),
             text: (
                 text: "Inventory",
