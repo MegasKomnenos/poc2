@@ -2,6 +2,7 @@ use crate::misc::*;
 use crate::component::*;
 use crate::ai::*;
 use crate::asset::*;
+use crate::ui::*;
 use crate::NUM_ITEM;
 
 use amethyst::{
@@ -12,7 +13,7 @@ use amethyst::{
         shrev:: {
             EventChannel, ReaderId,
         },
-        Transform, SystemDesc,  
+        Transform, SystemDesc, ParentHierarchy,
     },
     derive::SystemDesc,
     assets::{ Loader, AssetStorage, },
@@ -35,6 +36,44 @@ use amethyst::{
 use rayon::iter::ParallelIterator;
 use rand::prelude::*;
 use rand::distributions::WeightedIndex;
+
+#[derive(Debug, SystemDesc)]
+#[system_desc(name(SystemCustomUiDesc))]
+pub struct SystemCustomUi {
+    #[system_desc(event_channel_reader)]
+    event_reader: ReaderId<CustomUiAction>,
+}
+impl SystemCustomUi {
+    pub fn new(event_reader: ReaderId<CustomUiAction>) -> Self {
+        SystemCustomUi { event_reader }
+    }
+}
+impl<'s> System<'s> for SystemCustomUi {
+    type SystemData = (
+        Entities<'s>,
+        Read<'s, EventChannel<CustomUiAction>>,
+        ReadExpect<'s, ParentHierarchy>,
+    );
+
+    fn run(&mut self, (entities, events, hierarchy): Self::SystemData) {
+        for event in events.read(&mut self.event_reader) {
+            match event.event_type {
+                CustomUiActionType::KillSelf => {
+                    entities.delete(event.target);
+                }
+                CustomUiActionType::KillParent => {
+                    if let Some(parent) = hierarchy.parent(event.target) {
+                        for child in hierarchy.all_children_iter(parent) {
+                            entities.delete(child);
+                        }
+
+                        entities.delete(parent);
+                    }
+                }
+            }
+        }
+    }
+}
 
 #[derive(SystemDesc)]
 #[system_desc(name(SystemMovementPlayerDesc))]

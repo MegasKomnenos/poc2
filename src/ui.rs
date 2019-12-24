@@ -23,7 +23,8 @@ pub struct CustomUiAction {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum CustomUiActionType {
-    DispInfo,
+    KillSelf,
+    KillParent,
 }
 
 pub type CustomUiActionRetriggerSystemDesc = EventRetriggerSystemDesc<CustomUiActionRetrigger>;
@@ -61,9 +62,13 @@ impl EventRetrigger for CustomUiActionRetrigger {
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct CustomUiActionRetriggerData {
+    #[serde(default)]
     pub on_click_start: Vec<CustomUiActionType>,
+    #[serde(default)]
     pub on_click_stop: Vec<CustomUiActionType>,
+    #[serde(default)]
     pub on_hover_start: Vec<CustomUiActionType>,
+    #[serde(default)]
     pub on_hover_stop: Vec<CustomUiActionType>,
 }
 

@@ -10,7 +10,7 @@ mod ui;
 use crate::misc::*;
 use crate::state::*;
 use crate::system::*;
-use crate::ui::CustomUi;
+use crate::ui::*;
 
 extern crate rand;
 extern crate ron;
@@ -72,7 +72,9 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderTiles2D::<MiscTile, MortonEncoder2D, MiscTileBounds>::default())
                 .with_plugin(RenderUi::default())
         )?
-        .with_bundle(UiBundle::<StringBindings, CustomUi>::new())?;
+        .with_bundle(UiBundle::<StringBindings, CustomUi>::new())?
+        .with_system_desc(CustomUiActionRetriggerSystemDesc::default(), "Ui Custom Action Retrigger System", &["ui_button_system"])
+        .with_system_desc(SystemCustomUiDesc::default(), "Ui Custom Action Handling System", &["Ui Custom Action Retrigger System"]);
         
     let mut game = Application::new(asset_dir, PocLoad::default(), game_data)?;
     game.run();
