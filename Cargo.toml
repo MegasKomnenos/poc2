@@ -5,7 +5,7 @@ authors = []
 edition = "2018"
 
 [dependencies]
-amethyst = { git = "https://github.com/MegasKomnenos/amethyst", features = ["tiles"], rev = "b140e5f35f1421597db7692811341263ebcb3258" }
+amethyst = { git = "https://github.com/MegasKomnenos/amethyst", features = ["tiles"], rev = "4c0124f0e158a5c9b9c17d42e180e106ce661ef7" }
 serde = { version = "1.0.103", features = ["derive"] }
 ron = "0.5.1"
 rayon = "1.2.1"

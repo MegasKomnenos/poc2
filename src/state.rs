@@ -3,6 +3,7 @@ use crate::asset::*;
 use crate::ai::*;
 use crate::component::*;
 use crate::map::*;
+use crate::ui::CustomUi;
 use crate::{ NUM_ITEM, MAP_SIZE };
 
 use amethyst::{
@@ -82,7 +83,7 @@ impl SimpleState for PocLoad {
             .with(ComponentPlayerControlled)
             .build();
         
-        data.world.exec(|mut creator: UiCreator<'_>| creator.create("ui/inventory.ron", ()));
+        data.world.exec(|mut creator: UiCreator<'_, CustomUi>| creator.create("ui/inventory.ron", ()));
         
         load_ui(data.world);
         

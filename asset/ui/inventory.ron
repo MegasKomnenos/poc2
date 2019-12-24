@@ -1,32 +1,24 @@
 #![enable(implicit_some)]
-Container(
-    transform: (
-        id: "inventory",
-        x: -100.,
-        anchor: MiddleRight,
-        width: 200.,
-        height: 400.,
-        mouse_reactive: true,
-        draggable: true,
-    ),
-    background: SolidColor(0.6, 0.6, 1.0, 1.0),
-    children: [
-        Label(
+Custom(
+    CustomItem(
+        item: Container(
             transform: (
-                id: "inventory_label",
-                y: -20.,
-                width: 180.,
-                height: 20.,
-                tab_order: 1,
-                anchor: TopMiddle,
+                id: "inventory",
+                x: -100.,
+                anchor: MiddleRight,
+                width: 200.,
+                height: 400.,
+                mouse_reactive: true,
+                draggable: true,
             ),
-            text: (
-                text: "Inventory",
-                font: File("font/square.ttf", ("TTF", ())),
-                font_size: 20.,
-                color: (0.2, 0.2, 1.0, 1.0),
-                align: Middle,
-            )
+            background: SolidColor(0.6, 0.6, 1.0, 1.0),
+            children: [],
         ),
-    ],
+        data: CustomUiActionRetriggerData(
+            on_click_start: [],
+            on_click_stop: [],
+            on_hover_start: [],
+            on_hover_stop: [],
+        ),
+    ),
 )
