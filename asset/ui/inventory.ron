@@ -17,16 +17,16 @@ Container(
                 item: Button(
                     transform: (
                         id: "kill_button",
-                        x: 42.,
-                        y: -26., // -64-16
-                        width: 64.,
-                        height: 32.,
+                        x: 12.,
+                        y: -12., // -64-16
+                        width: 16.,
+                        height: 16.,
                         tab_order: 9,
                         anchor: TopLeft,
                         mouse_reactive: true,
                     ),
                     button: (
-                        text: "Exit",
+                        text: "X",
                         font: File("font/square.ttf", ("TTF", ())),
                         font_size: 12.,
                         normal_text_color: (0.0, 0.0, 0.0, 1.0),
