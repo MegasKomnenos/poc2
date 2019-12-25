@@ -59,7 +59,7 @@ impl SimpleState for PocLoad {
         data.world
             .create_entity()
             .with(Transform::from(Vector3::new(0.0, 0.0, 0.1)))
-            .with(Camera::standard_2d(width, height))
+            .with(Camera::standard_2d(width/50., height/50.))
             .build();
         data.world
             .create_entity()

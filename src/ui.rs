@@ -8,7 +8,8 @@ use amethyst::{
         PrefabData,
     },
     ui::{
-        EventReceiver, EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc, UiEvent, UiEventType, UiWidget, ToNativeWidget,
+        EventReceiver, EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc,
+        UiImagePrefab, UiTransformData, UiEvent, UiEventType, UiWidget, ToNativeWidget,
     },
     error::Error,
 };
@@ -62,7 +63,7 @@ impl EventRetrigger for CustomUiActionRetrigger {
     }
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct CustomUiActionRetriggerData {
     #[serde(default)]
     pub on_click_start: Vec<CustomUiActionType>,
@@ -74,7 +75,7 @@ pub struct CustomUiActionRetriggerData {
     pub on_hover_stop: Vec<CustomUiActionType>,
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct CustomUiPrefabData {
     #[serde(default)]
     pub retriggers: Option<CustomUiActionRetriggerData>,
@@ -114,7 +115,7 @@ impl<'a> PrefabData<'a> for CustomUiPrefabData {
         if self.is_inv_slot {
             inv_slots.insert(
                 entity,
-                ComponentInvSlot { item: None },
+                ComponentInvSlot,
             );
         }
         if self.is_inv_item {
@@ -128,12 +129,21 @@ impl<'a> PrefabData<'a> for CustomUiPrefabData {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum CustomUi {
+    Inventory {
+        container: UiWidget<CustomUi>,
+        slot: UiWidget<CustomUi>,
+        slot_data: CustomUiPrefabData,
+        slot_num_width: f32,
+        slot_num_height: f32,
+        slot_change_width: f32,
+        slot_change_height: f32,
+    },
     CustomItem {
         item: UiWidget<CustomUi>,
         data: CustomUiPrefabData,
-    }
+    },
 }
 
 impl ToNativeWidget for CustomUi {
@@ -141,6 +151,47 @@ impl ToNativeWidget for CustomUi {
 
     fn to_native_widget(self, _: Self::PrefabData) -> (UiWidget<CustomUi>, Self::PrefabData) {
         match self {
+            CustomUi::Inventory {
+                mut container,
+                slot,
+                slot_data,
+                slot_num_width,
+                slot_num_height,
+                slot_change_width,
+                slot_change_height,
+            } => {
+                if let UiWidget::Container { 
+                    children,
+                    ..
+                } = &mut container {
+                    if let UiWidget::Button {
+                        transform,
+                        button,
+                    } = slot {
+                        for y in 0..slot_num_height as usize {
+                            for x in 0..slot_num_width as usize {
+                                let mut transform = transform.clone();
+        
+                                transform.x += x as f32 * slot_change_width;
+                                transform.y += y as f32 * slot_change_height;
+        
+                                children.push(UiWidget::Custom(Box::new(CustomUi::CustomItem {
+                                    item: UiWidget::Button {
+                                        transform,
+                                        button: button.clone(),
+                                    },
+                                    data: slot_data.clone(),
+                                })));
+                            }
+                        }
+                    }
+                }
+
+                (
+                    container,
+                    Default::default(),
+                )
+            },
             CustomUi::CustomItem {
                 item,
                 data,
@@ -149,7 +200,7 @@ impl ToNativeWidget for CustomUi {
                     item,
                     data,
                 )
-            }
+            },
         }
     }
 }

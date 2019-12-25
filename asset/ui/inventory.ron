@@ -1,44 +1,75 @@
 #![enable(implicit_some)]
-Container(
-    transform: (
-        id: "inventory",
-        x: -100.,
-        anchor: MiddleRight,
-        width: 200.,
-        height: 400.,
-        tab_order: 0,
-        mouse_reactive: true,
-        draggable: true,
-    ),
-    background: SolidColor(0.6, 0.6, 1.0, 1.0),
-    children: [
-        Custom(
-            CustomItem(
-                item: Button(
-                    transform: (
-                        id: "kill_button",
-                        x: -12.,
-                        y: -12., // -64-16
-                        width: 16.,
-                        height: 16.,
-                        tab_order: 9,
-                        anchor: TopRight,
-                        mouse_reactive: true,
-                    ),
-                    button: (
-                        text: "X",
-                        font: File("font/square.ttf", ("TTF", ())),
-                        font_size: 12.,
-                        normal_text_color: (0.0, 0.0, 0.0, 1.0),
-                        normal_image: SolidColor(0.82, 0.83, 0.83, 1.0),
+Custom(
+    Inventory(
+        container: Container(
+            transform: (
+                id: "inventory",
+                anchor: MiddleLeft,
+                x: 132.,
+                width: 278.,
+                height: 570.,
+                tab_order: 0,
+                mouse_reactive: true,
+                draggable: true,
+            ),
+            background: SolidColor(0.6, 0.6, 1.0, 1.0),
+            children: [
+                Custom(
+                    CustomItem(
+                        item: Button(
+                            transform: (
+                                id: "kill_button",
+                                x: -12.,
+                                y: -12., // -64-16
+                                width: 16.,
+                                height: 16.,
+                                tab_order: 9,
+                                anchor: TopRight,
+                                mouse_reactive: true,
+                            ),
+                            button: (
+                                text: "X",
+                                font: File("font/square.ttf", ("TTF", ())),
+                                font_size: 12.,
+                                normal_text_color: (0.0, 0.0, 0.0, 1.0),
+                                normal_image: SolidColor(0.82, 0.83, 0.83, 1.0),
+                            )
+                        ),
+                        data: CustomUiPrefabData(
+                            retriggers: CustomUiActionRetriggerData(
+                                on_click_start: [KillSelf, KillParent]
+                            ),
+                        )
                     )
-                ),
-                data: CustomUiPrefabData(
-                    retriggers: CustomUiActionRetriggerData(
-                        on_click_start: [KillSelf, KillParent]
-                    ),
                 )
+            ],
+        ),
+        slot: Button(
+            transform: (
+                id: "inventory_slot",
+                x: 20.,
+                y: -40.,
+                width: 32.,
+                height: 32.,
+                tab_order: 9,
+                anchor: TopLeft,
+                mouse_reactive: true,
+            ),
+            button: (
+                text: "S",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 24.,
+                normal_text_color: (0.0, 0.0, 0.0, 1.0),
+                normal_image: SolidColor(0.82, 0.83, 0.83, 1.0),
             )
-        )
-    ],
+        ),
+        slot_data: CustomUiPrefabData(
+            retriggers: CustomUiActionRetriggerData(
+            ),
+        ),
+        slot_num_width: 8.,
+        slot_num_height: 16.,
+        slot_change_width: 34.,
+        slot_change_height: -34.,
+    )
 )
