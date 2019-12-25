@@ -1,3 +1,5 @@
+use crate::component::*;
+
 use amethyst::{
     ecs::{
         Entity, Component, DenseVecStorage, WriteStorage,
@@ -72,26 +74,55 @@ pub struct CustomUiActionRetriggerData {
     pub on_hover_stop: Vec<CustomUiActionType>,
 }
 
-impl<'a> PrefabData<'a> for CustomUiActionRetriggerData {
-    type SystemData = WriteStorage<'a, CustomUiActionRetrigger>;
+#[derive(Default, Serialize, Deserialize)]
+pub struct CustomUiPrefabData {
+    #[serde(default)]
+    pub retriggers: Option<CustomUiActionRetriggerData>,
+    #[serde(default)]
+    pub is_inv_slot: bool,
+    #[serde(default)]
+    pub is_inv_item: bool,
+}
+
+impl<'a> PrefabData<'a> for CustomUiPrefabData {
+    type SystemData = (
+        WriteStorage<'a, CustomUiActionRetrigger>,
+        WriteStorage<'a, ComponentInvSlot>,
+        WriteStorage<'a, ComponentInvItem>,
+    );
     type Result = ();
 
     fn add_to_entity(
         &self,
         entity: Entity,
-        storage: &mut Self::SystemData,
+        (retriggers, inv_slots, inv_items): &mut Self::SystemData,
         _: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
-        storage.insert(
-            entity,
-            CustomUiActionRetrigger {
-                on_click_start: self.on_click_start.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
-                on_click_stop: self.on_click_stop.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
-                on_hover_start: self.on_hover_start.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
-                on_hover_stop: self.on_hover_stop.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
-            },
-        );
+        if let Some(data) = &self.retriggers {
+            retriggers.insert(
+                entity,
+                CustomUiActionRetrigger {
+                    on_click_start: data.on_click_start.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
+                    on_click_stop: data.on_click_stop.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
+                    on_hover_start: data.on_hover_start.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
+                    on_hover_stop: data.on_hover_stop.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
+                },
+            );
+        }
+
+        if self.is_inv_slot {
+            inv_slots.insert(
+                entity,
+                ComponentInvSlot { item: None },
+            );
+        }
+        if self.is_inv_item {
+            inv_items.insert(
+                entity,
+                ComponentInvItem { name: "Testing".to_string() },
+            );
+        }
 
         Ok(())
     }
@@ -101,12 +132,12 @@ impl<'a> PrefabData<'a> for CustomUiActionRetriggerData {
 pub enum CustomUi {
     CustomItem {
         item: UiWidget<CustomUi>,
-        data: CustomUiActionRetriggerData,
+        data: CustomUiPrefabData,
     }
 }
 
 impl ToNativeWidget for CustomUi {
-    type PrefabData = CustomUiActionRetriggerData;
+    type PrefabData = CustomUiPrefabData;
 
     fn to_native_widget(self, _: Self::PrefabData) -> (UiWidget<CustomUi>, Self::PrefabData) {
         match self {

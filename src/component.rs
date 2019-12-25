@@ -55,3 +55,19 @@ pub struct ComponentPlayerControlled;
 impl Component for ComponentPlayerControlled {
     type Storage = DenseVecStorage<Self>;
 }
+
+pub struct ComponentInv {
+    pub items: Vec<Option<Entity>>,
+}
+
+pub struct ComponentInvSlot;
+impl Component for ComponentInvSlot {
+    type Storage = DenseVecStorage<Self>;
+}
+
+pub struct ComponentInvItem {
+    pub name: String,
+}
+impl Component for ComponentInvItem {
+    type Storage = DenseVecStorage<Self>;
+}
