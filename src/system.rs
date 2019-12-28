@@ -13,7 +13,7 @@ use amethyst::{
         shrev:: {
             EventChannel, ReaderId,
         },
-        Transform, ParentHierarchy, HiddenPropagate,
+        Transform, ParentHierarchy, HiddenPropagate, Parent,
     },
     derive::SystemDesc,
     ecs::{ Entity, Entities, System, SystemData, ReadStorage, WriteStorage, Read, ReadExpect, Write, Join, ParJoin, },
@@ -22,7 +22,7 @@ use amethyst::{
         camera::{ ActiveCamera, Camera, },
     },
     ui::{
-        UiFinder, UiText
+        UiFinder, UiText, UiTransform, UiImage,
     },
     window::ScreenDimensions,
     winit,
@@ -47,12 +47,17 @@ impl SystemCustomUi {
 }
 impl<'s> System<'s> for SystemCustomUi {
     type SystemData = (
+        Entities<'s>,
         Read<'s, EventChannel<CustomUiAction>>,
         ReadExpect<'s, ParentHierarchy>,
+        WriteStorage<'s, Parent>,
         WriteStorage<'s, HiddenPropagate>,
+        WriteStorage<'s, UiTransform>,
+        WriteStorage<'s, UiImage>,
+        WriteStorage<'s, ComponentItem>,
     );
 
-    fn run(&mut self, (events, hierarchy, mut hiddens): Self::SystemData) {
+    fn run(&mut self, (entities, events, hierarchy, mut parents, mut hiddens, mut ui_transforms, mut ui_images, mut items): Self::SystemData) {
         for event in events.read(&mut self.event_reader) {
             match event.event_type {
                 CustomUiActionType::KillSelf => {
@@ -62,6 +67,34 @@ impl<'s> System<'s> for SystemCustomUi {
                     if let Some(parent) = hierarchy.parent(event.target) {
                         hiddens.insert(parent, HiddenPropagate::default()).expect("Failed to kill parent widget");
                     }
+                }
+                CustomUiActionType::DragStartedItem => {
+                    let entity = entities
+                        .build_entity()
+                        .with(parents.get(event.target).unwrap().clone(), &mut parents)
+                        .with(ui_transforms.get(event.target).unwrap().clone(), &mut ui_transforms)
+                        .with(ui_images.get(event.target).unwrap().clone(), &mut ui_images)
+                        .with(ComponentItem { weight: items.get(event.target).unwrap().weight, dummy: None }, &mut items)
+                        .build();
+                    
+                    items.get_mut(event.target).unwrap().dummy = Some(entity);
+                    ui_transforms.get_mut(event.target).unwrap().local_z += 1.;
+                }
+                CustomUiActionType::DroppedItem => {
+                    let dummy = items.get(event.target).unwrap().dummy.unwrap();
+                    let dummy_transform = ui_transforms.get(dummy).unwrap();
+
+                    let x = dummy_transform.local_x;
+                    let y = dummy_transform.local_y;
+                    let z = dummy_transform.local_z;
+
+                    let ui_transform = ui_transforms.get_mut(event.target).unwrap();
+
+                    ui_transform.local_x = x;
+                    ui_transform.local_y = y;
+                    ui_transform.local_z = z;
+
+                    entities.delete(dummy).expect("Failed to kill dummy item");
                 }
             }
         }

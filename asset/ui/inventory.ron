@@ -67,15 +67,18 @@ Custom(
                                         width: 50.,
                                         height: 25.,
                                         anchor: TopLeft,
+                                        mouse_reactive: true,
+                                        draggable: true,
                                     ),
                                     image: SolidColor(0.18, 0.05, 0.85, 1.0),
                                 ),
                                 data: CustomUiPrefabData(
+                                    retriggers: CustomUiActionRetriggerData(
+                                        on_click_start: [DragStartedItem,],
+                                        on_drop: [DroppedItem,],
+                                    ),
                                     item: CustomUiItemData(
-                                        width: 2,
-                                        height: 1,
                                         weight: 1,
-                                        point: [0, 0],
                                     ),
                                 ),
                             ),
@@ -86,8 +89,6 @@ Custom(
         ),
         data: CustomUiPrefabData(
             inventory: CustomUiInventoryData(
-                width: 8,
-                height: 16,
                 weight: 10,
             ),
         ),

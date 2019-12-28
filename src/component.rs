@@ -58,18 +58,14 @@ impl Component for ComponentPlayerControlled {
 }
 
 pub struct ComponentItem {
-    pub width: u8,
-    pub height: u8,
     pub weight: u8,
+    pub dummy: Option<Entity>,
 }
 impl Component for ComponentItem {
     type Storage = DenseVecStorage<Self>;
 }
 
 pub struct ComponentInventory {
-    pub items: HashMap<Entity, Point2<u8>>,
-    pub width: u8,
-    pub height: u8,
     pub weight: u8,
 }
 impl Component for ComponentInventory {

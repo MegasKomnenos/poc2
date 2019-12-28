@@ -18,11 +18,10 @@ use serde::{
     Serialize, Deserialize,
 };
 
-use std::collections::HashMap;
-
 #[derive(Debug, Clone)]
 pub struct CustomUiAction {
     pub target: Entity,
+    pub other: Option<Entity>,
     pub event_type: CustomUiActionType,
 }
 
@@ -30,6 +29,8 @@ pub struct CustomUiAction {
 pub enum CustomUiActionType {
     KillSelf,
     KillParent,
+    DragStartedItem,
+    DroppedItem,
 }
 
 pub type CustomUiActionRetriggerSystemDesc = EventRetriggerSystemDesc<CustomUiActionRetrigger>;
@@ -40,6 +41,7 @@ pub struct CustomUiActionRetrigger {
     pub on_click_stop: Vec<CustomUiAction>,
     pub on_hover_start: Vec<CustomUiAction>,
     pub on_hover_stop: Vec<CustomUiAction>,
+    pub on_drop: Vec<CustomUiAction>,
 }
 
 impl Component for CustomUiActionRetrigger {
@@ -59,6 +61,14 @@ impl EventRetrigger for CustomUiActionRetrigger {
             UiEventType::ClickStop => out.receive(&self.on_click_stop),
             UiEventType::HoverStart => out.receive(&self.on_hover_start),
             UiEventType::HoverStop => out.receive(&self.on_hover_stop),
+            UiEventType::Dropped { dropped_on } => {
+                out.receive(
+                    &self.on_drop
+                    .iter()
+                    .map(|a| CustomUiAction { target: a.target, other: dropped_on, event_type: a.event_type })
+                    .collect::<Vec<CustomUiAction>>()
+                );
+            }
             _ => {}
         };
     }
@@ -74,19 +84,17 @@ pub struct CustomUiActionRetriggerData {
     pub on_hover_start: Vec<CustomUiActionType>,
     #[serde(default)]
     pub on_hover_stop: Vec<CustomUiActionType>,
+    #[serde(default)]
+    pub on_drop: Vec<CustomUiActionType>,
 }
 
 #[derive(Default, Clone, Serialize, Deserialize)]
 pub struct CustomUiInventoryData {
-    pub width: u8,
-    pub height: u8,
     pub weight: u8,
 }
 
 #[derive(Default, Clone, Serialize, Deserialize)]
 pub struct CustomUiItemData {
-    pub width: u8,
-    pub height: u8,
     pub weight: u8,
 }
 
@@ -119,10 +127,11 @@ impl<'a> PrefabData<'a> for CustomUiPrefabData {
             retriggers.insert(
                 entity,
                 CustomUiActionRetrigger {
-                    on_click_start: data.on_click_start.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
-                    on_click_stop: data.on_click_stop.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
-                    on_hover_start: data.on_hover_start.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
-                    on_hover_stop: data.on_hover_stop.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
+                    on_click_start: data.on_click_start.iter().map(|a| CustomUiAction { target: entity, other: None, event_type: *a }).collect(),
+                    on_click_stop: data.on_click_stop.iter().map(|a| CustomUiAction { target: entity, other: None, event_type: *a }).collect(),
+                    on_hover_start: data.on_hover_start.iter().map(|a| CustomUiAction { target: entity, other: None, event_type: *a }).collect(),
+                    on_hover_stop: data.on_hover_stop.iter().map(|a| CustomUiAction { target: entity, other: None, event_type: *a }).collect(),
+                    on_drop: data.on_drop.iter().map(|a| CustomUiAction { target: entity, other: None, event_type: *a}).collect(),
                 },
             )?;
         }
@@ -130,9 +139,6 @@ impl<'a> PrefabData<'a> for CustomUiPrefabData {
             inventories.insert(
                 entity,
                 ComponentInventory {
-                    items: HashMap::new(),
-                    width: data.width,
-                    height: data.height,
                     weight: data.weight,
                 }
             )?;
@@ -141,9 +147,8 @@ impl<'a> PrefabData<'a> for CustomUiPrefabData {
             items.insert(
                 entity,
                 ComponentItem {
-                    width: data.width,
-                    height: data.height,
                     weight: data.weight,
+                    dummy: None,
                 }
             )?;
         }
