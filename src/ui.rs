@@ -8,8 +8,8 @@ use amethyst::{
         PrefabData,
     },
     ui::{
-        EventReceiver, EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc,
-        UiImagePrefab, UiTransformData, UiEvent, UiEventType, UiWidget, ToNativeWidget,
+        EventReceiver, EventRetrigger, EventRetriggerSystemDesc,
+        UiEvent, UiEventType, UiWidget, ToNativeWidget,
     },
     error::Error,
 };
@@ -31,7 +31,6 @@ pub enum CustomUiActionType {
 }
 
 pub type CustomUiActionRetriggerSystemDesc = EventRetriggerSystemDesc<CustomUiActionRetrigger>;
-pub type CustomUiActionRetriggerSystem = EventRetriggerSystem<CustomUiActionRetrigger>;
 
 #[derive(Debug)]
 pub struct CustomUiActionRetrigger {
@@ -109,20 +108,20 @@ impl<'a> PrefabData<'a> for CustomUiPrefabData {
                     on_hover_start: data.on_hover_start.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
                     on_hover_stop: data.on_hover_stop.iter().map(|a| CustomUiAction { target: entity, event_type: *a }).collect(),
                 },
-            );
+            )?;
         }
 
         if self.is_inv_slot {
             inv_slots.insert(
                 entity,
                 ComponentInvSlot,
-            );
+            )?;
         }
         if self.is_inv_item {
             inv_items.insert(
                 entity,
                 ComponentInvItem { name: "Testing".to_string() },
-            );
+            )?;
         }
 
         Ok(())

@@ -5,10 +5,10 @@ authors = []
 edition = "2018"
 
 [dependencies]
-amethyst = { git = "https://github.com/MegasKomnenos/amethyst", features = ["tiles"], rev = "f7d003eed5596d3ef3ffcc80c4e11e70acb33a8a" }
-serde = { version = "1.0.103", features = ["derive"] }
+amethyst = { git = "https://github.com/MegasKomnenos/amethyst", features = ["tiles", "vulkan"], rev = "9f9395c064240ad1f2258c03b8ba341db3586e6d" }
+serde = { version = "1.0.104", features = ["derive"] }
 ron = "0.5.1"
-rayon = "1.2.1"
+rayon = "1.3.0"
 rand = "0.7.2"
 voronoi = "0.1.4"
 pathfinding = "2"

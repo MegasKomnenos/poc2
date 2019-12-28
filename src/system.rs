@@ -13,15 +13,12 @@ use amethyst::{
         shrev:: {
             EventChannel, ReaderId,
         },
-        Transform, SystemDesc, ParentHierarchy,
+        Transform, ParentHierarchy,
     },
     derive::SystemDesc,
-    assets::{ Loader, AssetStorage, },
-    ecs::{ Entity, Entities, System, SystemData, World, ReadStorage, WriteStorage, Read, ReadExpect, Write, Join, ParJoin, },
+    ecs::{ Entity, Entities, System, SystemData, ReadStorage, WriteStorage, Read, ReadExpect, Write, Join, ParJoin, },
     input::{ InputHandler, StringBindings, VirtualKeyCode, InputEvent }, 
     renderer::{
-        Texture,
-        sprite::{ SpriteRender, SpriteSheet, },
         camera::{ ActiveCamera, Camera, },
     },
     ui::{
@@ -30,7 +27,7 @@ use amethyst::{
     window::ScreenDimensions,
     winit,
     tiles::{
-        MapStorage, TileMap, Map,
+        TileMap, Map,
     },
 };
 use rayon::iter::ParallelIterator;
@@ -59,15 +56,15 @@ impl<'s> System<'s> for SystemCustomUi {
         for event in events.read(&mut self.event_reader) {
             match event.event_type {
                 CustomUiActionType::KillSelf => {
-                    entities.delete(event.target);
+                    entities.delete(event.target).expect("Couldn't kill ui widget");
                 }
                 CustomUiActionType::KillParent => {
                     if let Some(parent) = hierarchy.parent(event.target) {
                         for child in hierarchy.all_children_iter(parent) {
-                            entities.delete(child);
+                            entities.delete(child).expect("Couldn't kill child ui widget");
                         }
 
-                        entities.delete(parent);
+                        entities.delete(parent).expect("Couldn't kill parent ui widget");
                     }
                 }
             }
@@ -208,7 +205,7 @@ impl<'s> System<'s> for SystemTime {
                 }
             }
 
-            let mut am: String;
+            let am: String;
 
             if time.am {
                 am = "AM".to_string();
