@@ -21,7 +21,10 @@ const NUM_ITEM: usize = 4;
 const MAP_SIZE: u32 = 200;
 
 use amethyst::{
-    core::transform::TransformBundle,
+    core::{
+        transform::TransformBundle,
+        HideHierarchySystemDesc,
+    },
     prelude::*,
     input::{ InputBundle, StringBindings, },
     renderer::{
@@ -73,6 +76,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default())
         )?
         .with_bundle(UiBundle::<StringBindings, CustomUi>::new())?
+        .with_system_desc(HideHierarchySystemDesc::default(), "Hide Hierarchy System", &[])
         .with_system_desc(CustomUiActionRetriggerSystemDesc::default(), "Ui Custom Action Retrigger System", &["ui_button_system"])
         .with_system_desc(SystemCustomUiDesc::default(), "Ui Custom Action Handling System", &["Ui Custom Action Retrigger System"]);
         

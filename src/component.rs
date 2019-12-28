@@ -1,10 +1,11 @@
-use crate::misc::*;
 use crate::NUM_ITEM;
 
 use amethyst::{
-    core::math::{ Point3, Vector3 },
+    core::math::{ Point2, Point3, Vector3 },
     ecs::{Component, DenseVecStorage, Entity },
 };
+
+use std::collections::HashMap;
 
 pub struct ComponentWorkplace {
     pub variant: u8,
@@ -56,18 +57,21 @@ impl Component for ComponentPlayerControlled {
     type Storage = DenseVecStorage<Self>;
 }
 
-pub struct ComponentInv {
-    pub items: Vec<Option<Entity>>,
+pub struct ComponentItem {
+    pub width: u8,
+    pub height: u8,
+    pub weight: u8,
 }
-
-pub struct ComponentInvSlot;
-impl Component for ComponentInvSlot {
+impl Component for ComponentItem {
     type Storage = DenseVecStorage<Self>;
 }
 
-pub struct ComponentInvItem {
-    pub name: String,
+pub struct ComponentInventory {
+    pub items: HashMap<Entity, Point2<u8>>,
+    pub width: u8,
+    pub height: u8,
+    pub weight: u8,
 }
-impl Component for ComponentInvItem {
+impl Component for ComponentInventory {
     type Storage = DenseVecStorage<Self>;
 }

@@ -18,6 +18,8 @@ use serde::{
     Serialize, Deserialize,
 };
 
+use std::collections::HashMap;
+
 #[derive(Debug, Clone)]
 pub struct CustomUiAction {
     pub target: Entity,
@@ -75,27 +77,41 @@ pub struct CustomUiActionRetriggerData {
 }
 
 #[derive(Default, Clone, Serialize, Deserialize)]
+pub struct CustomUiInventoryData {
+    pub width: u8,
+    pub height: u8,
+    pub weight: u8,
+}
+
+#[derive(Default, Clone, Serialize, Deserialize)]
+pub struct CustomUiItemData {
+    pub width: u8,
+    pub height: u8,
+    pub weight: u8,
+}
+
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct CustomUiPrefabData {
     #[serde(default)]
     pub retriggers: Option<CustomUiActionRetriggerData>,
     #[serde(default)]
-    pub is_inv_slot: bool,
+    pub inventory: Option<CustomUiInventoryData>,
     #[serde(default)]
-    pub is_inv_item: bool,
+    pub item: Option<CustomUiItemData>,
 }
 
 impl<'a> PrefabData<'a> for CustomUiPrefabData {
     type SystemData = (
         WriteStorage<'a, CustomUiActionRetrigger>,
-        WriteStorage<'a, ComponentInvSlot>,
-        WriteStorage<'a, ComponentInvItem>,
+        WriteStorage<'a, ComponentItem>,
+        WriteStorage<'a, ComponentInventory>,
     );
     type Result = ();
 
     fn add_to_entity(
         &self,
         entity: Entity,
-        (retriggers, inv_slots, inv_items): &mut Self::SystemData,
+        (retriggers, items, inventories): &mut Self::SystemData,
         _: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
@@ -110,17 +126,25 @@ impl<'a> PrefabData<'a> for CustomUiPrefabData {
                 },
             )?;
         }
-
-        if self.is_inv_slot {
-            inv_slots.insert(
+        if let Some(data) = &self.inventory {
+            inventories.insert(
                 entity,
-                ComponentInvSlot,
+                ComponentInventory {
+                    items: HashMap::new(),
+                    width: data.width,
+                    height: data.height,
+                    weight: data.weight,
+                }
             )?;
         }
-        if self.is_inv_item {
-            inv_items.insert(
+        if let Some(data) = &self.item {
+            items.insert(
                 entity,
-                ComponentInvItem { name: "Testing".to_string() },
+                ComponentItem {
+                    width: data.width,
+                    height: data.height,
+                    weight: data.weight,
+                }
             )?;
         }
 
@@ -130,15 +154,6 @@ impl<'a> PrefabData<'a> for CustomUiPrefabData {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum CustomUi {
-    Inventory {
-        container: UiWidget<CustomUi>,
-        slot: UiWidget<CustomUi>,
-        slot_data: CustomUiPrefabData,
-        slot_num_width: f32,
-        slot_num_height: f32,
-        slot_change_width: f32,
-        slot_change_height: f32,
-    },
     CustomItem {
         item: UiWidget<CustomUi>,
         data: CustomUiPrefabData,
@@ -150,47 +165,6 @@ impl ToNativeWidget for CustomUi {
 
     fn to_native_widget(self, _: Self::PrefabData) -> (UiWidget<CustomUi>, Self::PrefabData) {
         match self {
-            CustomUi::Inventory {
-                mut container,
-                slot,
-                slot_data,
-                slot_num_width,
-                slot_num_height,
-                slot_change_width,
-                slot_change_height,
-            } => {
-                if let UiWidget::Container { 
-                    children,
-                    ..
-                } = &mut container {
-                    if let UiWidget::Button {
-                        transform,
-                        button,
-                    } = slot {
-                        for y in 0..slot_num_height as usize {
-                            for x in 0..slot_num_width as usize {
-                                let mut transform = transform.clone();
-        
-                                transform.x += x as f32 * slot_change_width;
-                                transform.y += y as f32 * slot_change_height;
-        
-                                children.push(UiWidget::Custom(Box::new(CustomUi::CustomItem {
-                                    item: UiWidget::Button {
-                                        transform,
-                                        button: button.clone(),
-                                    },
-                                    data: slot_data.clone(),
-                                })));
-                            }
-                        }
-                    }
-                }
-
-                (
-                    container,
-                    Default::default(),
-                )
-            },
             CustomUi::CustomItem {
                 item,
                 data,

@@ -13,7 +13,7 @@ use amethyst::{
         shrev:: {
             EventChannel, ReaderId,
         },
-        Transform, ParentHierarchy,
+        Transform, ParentHierarchy, HiddenPropagate,
     },
     derive::SystemDesc,
     ecs::{ Entity, Entities, System, SystemData, ReadStorage, WriteStorage, Read, ReadExpect, Write, Join, ParJoin, },
@@ -47,24 +47,20 @@ impl SystemCustomUi {
 }
 impl<'s> System<'s> for SystemCustomUi {
     type SystemData = (
-        Entities<'s>,
         Read<'s, EventChannel<CustomUiAction>>,
         ReadExpect<'s, ParentHierarchy>,
+        WriteStorage<'s, HiddenPropagate>,
     );
 
-    fn run(&mut self, (entities, events, hierarchy): Self::SystemData) {
+    fn run(&mut self, (events, hierarchy, mut hiddens): Self::SystemData) {
         for event in events.read(&mut self.event_reader) {
             match event.event_type {
                 CustomUiActionType::KillSelf => {
-                    entities.delete(event.target).expect("Couldn't kill ui widget");
+                    hiddens.insert(event.target, HiddenPropagate::default()).expect("Failed to kill widget");
                 }
                 CustomUiActionType::KillParent => {
                     if let Some(parent) = hierarchy.parent(event.target) {
-                        for child in hierarchy.all_children_iter(parent) {
-                            entities.delete(child).expect("Couldn't kill child ui widget");
-                        }
-
-                        entities.delete(parent).expect("Couldn't kill parent ui widget");
+                        hiddens.insert(parent, HiddenPropagate::default()).expect("Failed to kill parent widget");
                     }
                 }
             }
