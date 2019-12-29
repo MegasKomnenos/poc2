@@ -1,57 +1,58 @@
 #![enable(implicit_some)]
-Custom(
-    CustomItem(
-        item: Container(
-            transform: (
-                id: "inventory_window",
-                anchor: MiddleLeft,
-                x: 100.,
-                width: 200.,
-                height: 417.,
-                tab_order: 0,
-                mouse_reactive: true,
-                draggable: true,
-            ),
+Container(
+    transform: (
+        id: "inventory_window",
+        anchor: MiddleLeft,
+        x: 100.,
+        width: 200.,
+        height: 417.,
+        tab_order: 0,
+        mouse_reactive: true,
+        draggable: true,
+    ),
 
-            background: SolidColor(0.0, 0.0, 0.0, 0.75),
+    background: SolidColor(0.0, 0.0, 0.0, 0.75),
 
-            children: [
-                Custom(
-                    CustomItem(
-                        item: Button(
-                            transform: (
-                                id: "kill_button",
-                                x: -6.5,
-                                y: -8.5,
-                                width: 13.,
-                                height: 13.,
-                                tab_order: 9,
-                                anchor: TopRight,
-                                mouse_reactive: true,
-                            ),
-                            button: (
-                                text: "X",
-                                font: File("font/square.ttf", ("TTF", ())),
-                                font_size: 13.,
-                                normal_text_color: (0.0, 0.0, 0.0, 1.0),
-                                normal_image: SolidColor(0.82, 0.83, 0.83, 1.0),
-                            ),
-                        ),
-                        data: CustomUiPrefabData(
-                            retriggers: CustomUiActionRetriggerData(
-                                on_click_start: [KillSelf, KillParent],
-                            ),
-                        ),
+    children: [
+        Custom(
+            CustomItem(
+                item: Button(
+                    transform: (
+                        id: "kill_button",
+                        x: -6.5,
+                        y: -8.5,
+                        width: 13.,
+                        height: 13.,
+                        tab_order: 9,
+                        anchor: TopRight,
+                        mouse_reactive: true,
+                    ),
+                    button: (
+                        text: "X",
+                        font: File("font/square.ttf", ("TTF", ())),
+                        font_size: 13.,
+                        normal_text_color: (0.0, 0.0, 0.0, 1.0),
+                        normal_image: SolidColor(0.82, 0.83, 0.83, 1.0),
                     ),
                 ),
+                data: CustomUiPrefabData(
+                    retriggers: CustomUiActionRetriggerData(
+                        on_click_start: [KillSelf, KillParent],
+                    ),
+                ),
+            ),
+        ),
 
-                Container(
+        Custom(
+            CustomItem(
+                item: Container(
                     transform: (
                         id: "inventory_body",
                         ancor: TopLeft,
                         y: -8.5,
                         width: 200.,
                         height: 400.,
+                        mouse_reactive: true,
                     ),
 
                     background: SolidColor(0.0, 0.0, 0.0, 0.5),
@@ -85,12 +86,12 @@ Custom(
                         ),
                     ],
                 ),
-            ],
-        ),
-        data: CustomUiPrefabData(
-            inventory: CustomUiInventoryData(
-                weight: 10,
-            ),
-        ),
-    )
+                data: CustomUiPrefabData(
+                    inventory: CustomUiInventoryData(
+                        weight: 10,
+                    ),
+                ),
+            )
+        )
+    ],
 )

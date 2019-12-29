@@ -8,7 +8,7 @@ use crate::NUM_ITEM;
 use amethyst::{
     core::{ 
         math::{ 
-            Vector3, Vector2, Point3, 
+            Vector3, Vector2, Point3, Point2, 
         }, 
         shrev:: {
             EventChannel, ReaderId,
@@ -50,6 +50,7 @@ impl<'s> System<'s> for SystemCustomUi {
         Entities<'s>,
         Read<'s, EventChannel<CustomUiAction>>,
         ReadExpect<'s, ParentHierarchy>,
+        ReadStorage<'s, ComponentInventory>,
         WriteStorage<'s, Parent>,
         WriteStorage<'s, HiddenPropagate>,
         WriteStorage<'s, UiTransform>,
@@ -57,8 +58,8 @@ impl<'s> System<'s> for SystemCustomUi {
         WriteStorage<'s, ComponentItem>,
     );
 
-    fn run(&mut self, (entities, events, hierarchy, mut parents, mut hiddens, mut ui_transforms, mut ui_images, mut items): Self::SystemData) {
-        for event in events.read(&mut self.event_reader) {
+    fn run(&mut self, (entities, events, hierarchy, inventories, mut parents, mut hiddens, mut ui_transforms, mut ui_images, mut items): Self::SystemData) {
+        'oouter: for event in events.read(&mut self.event_reader) {
             match event.event_type {
                 CustomUiActionType::KillSelf => {
                     hiddens.insert(event.target, HiddenPropagate::default()).expect("Failed to kill widget");
@@ -81,6 +82,53 @@ impl<'s> System<'s> for SystemCustomUi {
                     ui_transforms.get_mut(event.target).unwrap().local_z += 1.;
                 }
                 CustomUiActionType::DroppedItem => {
+                    println!("a");
+                    if let Some(other) = event.other {
+                        println!("b");
+                        if inventories.get(other).is_some() {
+                            println!("c");
+                            let ui_transform = ui_transforms.get(event.target).unwrap();
+                            let corners = get_corners(ui_transform.pixel_x(), ui_transform.pixel_y(), ui_transform.width, ui_transform.height);
+                            let children = hierarchy.children(other);
+                            
+                            let mut i = children.len() - 1;
+
+                            'outer: for child in children.iter().filter(|c| **c != event.target) {
+                                i -= 1;
+
+                                let t = ui_transforms.get(*child).unwrap();
+
+                                for corner in corners.iter() {
+                                    if t.position_inside(corner[0], corner[1]) {
+                                        break 'outer;
+                                    }
+                                }
+
+                                let c = get_corners(t.pixel_x(), t.pixel_y(), t.width, t.height);
+
+                                for corner in c.iter() {
+                                    if ui_transform.position_inside(corner[0], corner[1]) {
+                                        break 'outer;
+                                    }
+                                }
+
+                                if i == 0 {
+                                    let t = ui_transforms.get_mut(event.target).unwrap();
+
+                                    let x_offset = corners[0][0] - (t.pixel_x() - t.width / 2.);
+                                    let y_offset = corners[0][1] - (t.pixel_y() - t.height / 2.);
+
+                                    t.local_x += x_offset;
+                                    t.local_y += y_offset;
+
+                                    entities.delete(items.get(event.target).unwrap().dummy.unwrap()).expect("Failed to kill dummy item");
+
+                                    continue 'oouter;
+                                }
+                            }
+                        }
+                    }
+
                     let dummy = items.get(event.target).unwrap().dummy.unwrap();
                     let dummy_transform = ui_transforms.get(dummy).unwrap();
 
