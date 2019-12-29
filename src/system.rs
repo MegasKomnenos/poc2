@@ -121,8 +121,8 @@ impl<'s> System<'s> for SystemCustomUi {
 
                                     if c0[2][0] >= t3.local_x - t3.width / 2. 
                                     && c0[2][0] < t3.local_x + t3.width / 2.
-                                    && c0[2][1] >= t3.local_y + t3.height / 2.
-                                    && c0[2][1] < t3.local_y - t3.height / 2. {
+                                    && c0[2][1] <= t3.local_y + t3.height / 2.
+                                    && c0[2][1] > t3.local_y - t3.height / 2. {
                                         b = false;
                                         
                                         break;
