@@ -20,27 +20,6 @@ use amethyst::{
 use pathfinding::prelude::{ astar, absdiff };
 use std::ops::Deref;
 
-pub fn get_corners(x: f32, y: f32, width: f32, height: f32) -> Vec<Point2<f32>> {
-    vec![
-        Point2::new(
-            ((x - width / 2.) / 25.).floor() * 25., 
-            ((y - height / 2.) / 25.).ceil() * 25.,
-        ),
-        Point2::new(
-            ((x + width / 2.) / 25.).floor() * 25., 
-            ((y - height / 2.) / 25.).ceil() * 25.,
-        ),
-        Point2::new(
-            ((x + width / 2.) / 25.).floor() * 25., 
-            ((y + height / 2.) / 25.).ceil() * 25.,
-        ),
-        Point2::new(
-            ((x - width / 2.) / 25.).floor() * 25., 
-            ((y + height / 2.) / 25.).ceil() * 25.,
-        ),
-    ]
-}
-
 pub enum MiscMapMode {
     Terrain,
     Nothing,

@@ -57,6 +57,7 @@ impl Component for ComponentPlayerControlled {
     type Storage = DenseVecStorage<Self>;
 }
 
+#[derive(Clone)]
 pub struct ComponentItem {
     pub weight: u8,
     pub dummy: Option<Entity>,

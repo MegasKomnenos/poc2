@@ -70,56 +70,74 @@ impl<'s> System<'s> for SystemCustomUi {
                     }
                 }
                 CustomUiActionType::DragStartedItem => {
+                    let mut t = ui_transforms.get(event.target).unwrap().clone();
+                    t.opaque = false;
+
                     let entity = entities
                         .build_entity()
                         .with(parents.get(event.target).unwrap().clone(), &mut parents)
-                        .with(ui_transforms.get(event.target).unwrap().clone(), &mut ui_transforms)
+                        .with(t, &mut ui_transforms)
                         .with(ui_images.get(event.target).unwrap().clone(), &mut ui_images)
-                        .with(ComponentItem { weight: items.get(event.target).unwrap().weight, dummy: None }, &mut items)
+                        .with(items.get(event.target).unwrap().clone(), &mut items)
                         .build();
                     
                     items.get_mut(event.target).unwrap().dummy = Some(entity);
                     ui_transforms.get_mut(event.target).unwrap().local_z += 1.;
                 }
                 CustomUiActionType::DroppedItem => {
-                    println!("a");
                     if let Some(other) = event.other {
-                        println!("b");
                         if inventories.get(other).is_some() {
-                            println!("c");
-                            let ui_transform = ui_transforms.get(event.target).unwrap();
-                            let corners = get_corners(ui_transform.pixel_x(), ui_transform.pixel_y(), ui_transform.width, ui_transform.height);
-                            let children = hierarchy.children(other);
-                            
-                            let mut i = children.len() - 1;
+                            let t0 = ui_transforms.get(event.target).unwrap();
+                            let t1 = ui_transforms.get(other).unwrap();
+                            let mut t2 = t0.clone();
 
-                            'outer: for child in children.iter().filter(|c| **c != event.target) {
-                                i -= 1;
+                            t2.local_x = ((t0.pixel_x() - (t1.pixel_x() - t1.width / 2.)) / 25.).floor() * 25.;
+                            t2.local_y = ((t0.pixel_y() - (t1.pixel_y() + t1.height / 2.)) / 25.).ceil() * 25. - 12.5 ;
 
-                                let t = ui_transforms.get(*child).unwrap();
+                            let c0 = vec![
+                                Point2::new(t2.local_x - t2.width / 2., t2.local_y - t2.height / 2.),
+                                Point2::new(t2.local_x + t2.width / 2., t2.local_y - t2.height / 2.),
+                                Point2::new(t2.local_x - t2.width / 2., t2.local_y + t2.height / 2.),
+                                Point2::new(t2.local_x + t2.width / 2., t2.local_y + t2.height / 2.),
+                            ];
 
-                                for corner in corners.iter() {
-                                    if t.position_inside(corner[0], corner[1]) {
-                                        break 'outer;
+                            let mut b = true;
+
+                            for corner in c0.iter() {
+                                if corner[0] < 0. || corner[0] > t1.width
+                                || corner[1] < -t1.height || corner[1] > 0. {
+                                    b = false;
+
+                                    break;
+                                }
+                            }
+
+                            if b {
+                                let children = hierarchy.children(other);
+                                let dummy = items.get(event.target).unwrap().dummy.unwrap();
+
+                                for child in children.iter().filter(|c| **c != event.target && **c != dummy) {
+                                    let t3 = ui_transforms.get(*child).unwrap();
+
+                                    if c0[2][0] >= t3.local_x - t3.width / 2. 
+                                    && c0[2][0] < t3.local_x + t3.width / 2.
+                                    && c0[2][1] >= t3.local_y + t3.height / 2.
+                                    && c0[2][1] < t3.local_y - t3.height / 2. {
+                                        b = false;
+                                        
+                                        break;
                                     }
                                 }
 
-                                let c = get_corners(t.pixel_x(), t.pixel_y(), t.width, t.height);
-
-                                for corner in c.iter() {
-                                    if ui_transform.position_inside(corner[0], corner[1]) {
-                                        break 'outer;
-                                    }
-                                }
-
-                                if i == 0 {
+                                if b {
                                     let t = ui_transforms.get_mut(event.target).unwrap();
+                                    let p = parents.get_mut(event.target).unwrap();
 
-                                    let x_offset = corners[0][0] - (t.pixel_x() - t.width / 2.);
-                                    let y_offset = corners[0][1] - (t.pixel_y() - t.height / 2.);
+                                    t.local_x = t2.local_x;
+                                    t.local_y = t2.local_y;
+                                    t.local_z -= 1.;
 
-                                    t.local_x += x_offset;
-                                    t.local_y += y_offset;
+                                    p.entity = other;
 
                                     entities.delete(items.get(event.target).unwrap().dummy.unwrap()).expect("Failed to kill dummy item");
 
