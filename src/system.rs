@@ -92,7 +92,7 @@ impl<'s> System<'s> for SystemCustomUi {
                             let mut t2 = t0.clone();
 
                             t2.local_x = ((t0.pixel_x() - (t1.pixel_x() - t1.width / 2.)) / 25.).floor() * 25.;
-                            t2.local_y = ((t0.pixel_y() - (t1.pixel_y() + t1.height / 2.)) / 25.).ceil() * 25. - 12.5 ;
+                            t2.local_y = (((t0.pixel_y() + t0.height / 2.) - (t1.pixel_y() + t1.height / 2.)) / 25.).ceil() * 25. - t0.height / 2.;
 
                             let c0 = vec![
                                 Point2::new(t2.local_x - t2.width / 2., t2.local_y - t2.height / 2.),
