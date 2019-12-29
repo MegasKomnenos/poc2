@@ -33,6 +33,7 @@ use amethyst::{
 use rayon::iter::ParallelIterator;
 use rand::prelude::*;
 use rand::distributions::WeightedIndex;
+use std::collections::HashMap;
 
 #[derive(Debug, SystemDesc)]
 #[system_desc(name(SystemCustomUiDesc))]
@@ -91,7 +92,7 @@ impl<'s> System<'s> for SystemCustomUi {
                             let t1 = ui_transforms.get(other).unwrap();
                             let mut t2 = t0.clone();
 
-                            t2.local_x = ((t0.pixel_x() - (t1.pixel_x() - t1.width / 2.)) / 25.).floor() * 25.;
+                            t2.local_x = (((t0.pixel_x() - t0.width / 2.) - (t1.pixel_x() - t1.width / 2.)) / 25.).floor() * 25. + t0.width / 2.;
                             t2.local_y = (((t0.pixel_y() + t0.height / 2.) - (t1.pixel_y() + t1.height / 2.)) / 25.).ceil() * 25. - t0.height / 2.;
 
                             let c0 = vec![
@@ -161,6 +162,61 @@ impl<'s> System<'s> for SystemCustomUi {
                     ui_transform.local_z = z;
 
                     entities.delete(dummy).expect("Failed to kill dummy item");
+                }
+                CustomUiActionType::SortInventory => {
+                    let inventory = parents.get(event.target).unwrap().entity;
+
+                    let mut item_storage = Vec::new();
+
+                    for child in hierarchy.children(inventory) {
+                        if items.get(*child).is_some() {
+                            item_storage.push(*child);
+                        }
+                    }
+
+                    item_storage.sort_unstable_by(|a, b| {
+                        let a = ui_transforms.get(*a).unwrap();
+                        let b = ui_transforms.get(*b).unwrap();
+
+                        (b.width * b.height).partial_cmp(&(a.width * a.height)).unwrap()
+                    });
+
+                    let inventory_transform = ui_transforms.get(inventory).unwrap();
+                    let width = (inventory_transform.width / 25.) as usize;
+                    let height = (inventory_transform.height / 25.) as usize;
+
+                    let mut grid = vec![true; width * height];
+                    let mut places = HashMap::new();
+                    
+                    for item in item_storage.iter() {
+                        let rect = get_cover(&grid, width, height);
+
+                        let ui_transform = ui_transforms.get(*item).unwrap();
+                        let width_item = (ui_transform.width / 25.) as usize;
+                        let height_item = (ui_transform.height / 25.) as usize;
+
+                        if let Some(place) = rect
+                            .iter()
+                            .filter(|(_, size)| size[0] >= width_item && size[1] >= height_item)
+                            .min_by(|(_, s0), (_, s1)| (s0[0] * s0[1]).cmp(&(s1[0] * s1[1]))) {
+                            for y in 0..height_item {
+                                for x in 0..width_item {
+                                    grid[(place.0[1] + y) * width + place.0[0] + x] = false;
+                                }
+                            }
+                            
+                            places.insert(*item, *place);
+                        } else {
+                            continue 'oouter;
+                        }
+                    }
+
+                    for (entity, place) in places.iter() {
+                        let ui_transform = ui_transforms.get_mut(*entity).unwrap();
+
+                        ui_transform.local_x = place.0[0] as f32 * 25. + ui_transform.width / 2.;
+                        ui_transform.local_y = place.0[1] as f32 * -25. - ui_transform.height / 2.;
+                    }
                 }
             }
         }

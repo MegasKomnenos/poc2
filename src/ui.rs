@@ -31,6 +31,7 @@ pub enum CustomUiActionType {
     KillParent,
     DragStartedItem,
     DroppedItem,
+    SortInventory,
 }
 
 pub type CustomUiActionRetriggerSystemDesc = EventRetriggerSystemDesc<CustomUiActionRetrigger>;

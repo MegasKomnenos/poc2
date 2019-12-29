@@ -19,6 +19,49 @@ use amethyst::{
 };
 use pathfinding::prelude::{ astar, absdiff };
 use std::ops::Deref;
+use std::collections::{ HashMap, HashSet };
+
+pub fn get_cover(grid: &Vec<bool>, width: usize, height: usize) -> HashSet<(Point2<usize>, Vector2<usize>)> {
+    let mut strips: HashMap<Point2<usize>, Point2<usize>> = HashMap::new();
+
+    for y in 0..height {
+        for x in 0..width {
+            if grid[y * width + x] && (y == 0 || !grid[(y - 1) * width + x]) {
+                let upper = Point2::new(x, y);
+                let mut lower = Point2::new(x, y);
+
+                while lower[1] + 1 < height && grid[(lower[1] + 1) * width + x] {
+                    lower[1] += 1;
+                }
+
+                strips.insert(upper, lower);
+            }
+        }
+    }
+
+    let mut squares: HashSet<(Point2<usize>, Vector2<usize>)> = HashSet::new();
+
+    for (upper, lower) in strips.iter() {
+        let mut upper_left = *upper;
+        let mut width_height = Vector2::new(1, lower[1] - upper[1] + 1);
+
+        while upper_left[0] > 0 && grid[upper_left[1] * width + upper_left[0] - 1] {
+            upper_left[0] -= 1;
+            width_height[0] += 1;
+        }
+
+        let mut upper_right = *upper;
+
+        while upper_right[0] + 1 < width && grid[upper_right[1] * width + upper_right[0] + 1] {
+            upper_right[0] += 1;
+            width_height[0] += 1;
+        }
+
+        squares.insert((upper_left, width_height));
+    }
+
+    squares
+}
 
 pub enum MiscMapMode {
     Terrain,
