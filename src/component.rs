@@ -59,6 +59,7 @@ impl Component for ComponentPlayerControlled {
 
 #[derive(Clone)]
 pub struct ComponentItem {
+    pub name: String,
     pub weight: u8,
     pub dummy: Option<Entity>,
 }

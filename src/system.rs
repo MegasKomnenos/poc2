@@ -56,10 +56,11 @@ impl<'s> System<'s> for SystemCustomUi {
         WriteStorage<'s, HiddenPropagate>,
         WriteStorage<'s, UiTransform>,
         WriteStorage<'s, UiImage>,
+        WriteStorage<'s, UiText>,
         WriteStorage<'s, ComponentItem>,
     );
 
-    fn run(&mut self, (entities, events, hierarchy, inventories, mut parents, mut hiddens, mut ui_transforms, mut ui_images, mut items): Self::SystemData) {
+    fn run(&mut self, (entities, events, hierarchy, inventories, mut parents, mut hiddens, mut ui_transforms, mut ui_images, mut ui_texts, mut items): Self::SystemData) {
         'outer: for event in events.read(&mut self.event_reader) {
             match event.event_type {
                 CustomUiActionType::KillSelf => {
@@ -210,6 +211,28 @@ impl<'s> System<'s> for SystemCustomUi {
                         ui_transform.local_x = place.0[0] as f32 * 25. + ui_transform.width / 2.;
                         ui_transform.local_y = place.0[1] as f32 * -25. - ui_transform.height / 2.;
                     }
+                }
+                CustomUiActionType::ShowItemInfo => {
+                    let container = (&*entities, &ui_transforms)
+                        .join()
+                        .find(|(_, transform)| transform.id == "item_info_container")
+                        .map(|(entity, _)| entity)
+                        .unwrap();
+                        
+                    let item = items.get(event.target).unwrap();
+                    
+                    parents.insert(container, Parent { entity: event.target }).expect("Failed to insert new parent to item info container");
+                    hiddens.remove(container);
+                    ui_texts.get_mut(hierarchy.children(container)[0]).unwrap().text = format!("{}", item.name);
+                }
+                CustomUiActionType::KillItemInfo => {
+                    let container = (&*entities, &ui_transforms)
+                        .join()
+                        .find(|(_, transform)| transform.id == "item_info_container")
+                        .map(|(entity, _)| entity)
+                        .unwrap();
+
+                    hiddens.insert(container, HiddenPropagate::default()).expect("failed to insert new hidden status to item info container");
                 }
             }
         }

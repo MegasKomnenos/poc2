@@ -84,7 +84,7 @@ impl SimpleState for PocLoad {
             .build();
         
         data.world.exec(|mut creator: UiCreator<'_, CustomUi>| creator.create("ui/inventory.ron", ()));
-        data.world.exec(|mut creator: UiCreator<'_, CustomUi>| creator.create("ui/inventory.ron", ()));
+        data.world.exec(|mut creator: UiCreator<'_, CustomUi>| creator.create("ui/item_info.ron", ()));
         
         load_ui(data.world);
         

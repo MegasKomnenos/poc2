@@ -104,9 +104,12 @@ Container(
                                 data: CustomUiPrefabData(
                                     retriggers: CustomUiActionRetriggerData(
                                         on_click_start: [DragStartedItem,],
+                                        on_hover_start: [ShowItemInfo,],
+                                        on_hover_stop: [KillItemInfo,],
                                         on_drop: [DroppedItem,],
                                     ),
                                     item: CustomUiItemData(
+                                        name: "Arthur Chan",
                                         weight: 1,
                                     ),
                                 ),
@@ -130,9 +133,12 @@ Container(
                                 data: CustomUiPrefabData(
                                     retriggers: CustomUiActionRetriggerData(
                                         on_click_start: [DragStartedItem,],
+                                        on_hover_start: [ShowItemInfo,],
+                                        on_hover_stop: [KillItemInfo,],
                                         on_drop: [DroppedItem,],
                                     ),
                                     item: CustomUiItemData(
+                                        name: "Excalibur",
                                         weight: 1,
                                     ),
                                 ),
@@ -156,9 +162,12 @@ Container(
                                 data: CustomUiPrefabData(
                                     retriggers: CustomUiActionRetriggerData(
                                         on_click_start: [DragStartedItem,],
+                                        on_hover_start: [ShowItemInfo,],
+                                        on_hover_stop: [KillItemInfo,],
                                         on_drop: [DroppedItem,],
                                     ),
                                     item: CustomUiItemData(
+                                        name: "Something Something",
                                         weight: 1,
                                     ),
                                 ),

@@ -32,6 +32,8 @@ pub enum CustomUiActionType {
     DragStartedItem,
     DroppedItem,
     SortInventory,
+    ShowItemInfo,
+    KillItemInfo,
 }
 
 pub type CustomUiActionRetriggerSystemDesc = EventRetriggerSystemDesc<CustomUiActionRetrigger>;
@@ -96,6 +98,7 @@ pub struct CustomUiInventoryData {
 
 #[derive(Default, Clone, Serialize, Deserialize)]
 pub struct CustomUiItemData {
+    pub name: String,
     pub weight: u8,
 }
 
@@ -148,6 +151,7 @@ impl<'a> PrefabData<'a> for CustomUiPrefabData {
             items.insert(
                 entity,
                 ComponentItem {
+                    name: data.name.clone(),
                     weight: data.weight,
                     dummy: None,
                 }

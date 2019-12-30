@@ -1,0 +1,33 @@
+#![enable(implicit_some)]
+Container(
+    transform: (
+        id: "item_info_container",
+        width: 75.,
+        height: 75.,
+        tab_order: 3,
+        opaque: false,
+        hidden: true,
+        anchor: MiddleRight,
+    ),
+    background: SolidColor(0.0, 0.0, 0.0, 0.9),
+    children: [
+        Label(
+            transform: (
+                id: "item_info_content",
+                width: 75.,
+                height: 75.,
+                tab_order: 4,
+                opaque: false,
+                anchor: Middle,
+                stretch: XY(x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
+            ),
+            text: (
+                text: "",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 12.,
+                color: (0.2, 0.2, 1.0, 1.0),
+                align: MiddleLeft,
+            ),
+        ),
+    ],
+)
