@@ -60,7 +60,7 @@ impl<'s> System<'s> for SystemCustomUi {
     );
 
     fn run(&mut self, (entities, events, hierarchy, inventories, mut parents, mut hiddens, mut ui_transforms, mut ui_images, mut items): Self::SystemData) {
-        'oouter: for event in events.read(&mut self.event_reader) {
+        'outer: for event in events.read(&mut self.event_reader) {
             match event.event_type {
                 CustomUiActionType::KillSelf => {
                     hiddens.insert(event.target, HiddenPropagate::default()).expect("Failed to kill widget");
@@ -90,47 +90,40 @@ impl<'s> System<'s> for SystemCustomUi {
                         if inventories.get(other).is_some() {
                             let t0 = ui_transforms.get(event.target).unwrap();
                             let t1 = ui_transforms.get(other).unwrap();
+
                             let mut t2 = t0.clone();
 
-                            t2.local_x = (((t0.pixel_x() - t0.width / 2.) - (t1.pixel_x() - t1.width / 2.)) / 25.).floor() * 25. + t0.width / 2.;
-                            t2.local_y = (((t0.pixel_y() + t0.height / 2.) - (t1.pixel_y() + t1.height / 2.)) / 25.).ceil() * 25. - t0.height / 2.;
+                            t2.local_x = t0.pixel_x() - t1.pixel_x() + t1.width / 2.;
+                            t2.local_y = t0.pixel_y() - t1.pixel_y() - t1.height / 2.;
 
-                            let c0 = vec![
-                                Point2::new(t2.local_x - t2.width / 2., t2.local_y - t2.height / 2.),
-                                Point2::new(t2.local_x + t2.width / 2., t2.local_y - t2.height / 2.),
-                                Point2::new(t2.local_x - t2.width / 2., t2.local_y + t2.height / 2.),
-                                Point2::new(t2.local_x + t2.width / 2., t2.local_y + t2.height / 2.),
-                            ];
-
-                            let mut b = true;
-
-                            for corner in c0.iter() {
-                                if corner[0] < 0. || corner[0] > t1.width
-                                || corner[1] < -t1.height || corner[1] > 0. {
-                                    b = false;
-
-                                    break;
-                                }
+                            if t2.local_x >= 0.0 && t2.local_x <= t2.width / 2. {
+                                t2.local_x = t2.width / 2.
+                            } else {
+                                t2.local_x = ((t2.local_x - t2.width / 2.) / 25.).floor() * 25. + t2.width / 2.;
+                            }
+                            if t2.local_y <= 0.0 && -t2.local_y <= t2.height / 2. {
+                                t2.local_y = -t2.height / 2.
+                            } else {
+                                t2.local_y = ((t2.local_y + t2.height / 2.) / 25.).floor() * 25. - t2.height / 2.;
                             }
 
-                            if b {
-                                let children = hierarchy.children(other);
+                            if t2.local_x > 0. && t2.local_x < t1.width
+                            && t2.local_y < 0. && -t2.local_y < t1.height {
                                 let dummy = items.get(event.target).unwrap().dummy.unwrap();
+                                
+                                if hierarchy
+                                    .children(other)
+                                    .iter()
+                                    .filter(|c| **c != event.target && **c != dummy)
+                                    .find(|c| {
+                                        let t3 = ui_transforms.get(**c).unwrap();
 
-                                for child in children.iter().filter(|c| **c != event.target && **c != dummy) {
-                                    let t3 = ui_transforms.get(*child).unwrap();
-
-                                    if c0[2][0] >= t3.local_x - t3.width / 2. 
-                                    && c0[2][0] < t3.local_x + t3.width / 2.
-                                    && c0[2][1] <= t3.local_y + t3.height / 2.
-                                    && c0[2][1] > t3.local_y - t3.height / 2. {
-                                        b = false;
-                                        
-                                        break;
-                                    }
-                                }
-
-                                if b {
+                                        t2.local_x + t2.width / 2. > t3.local_x - t3.width / 2.
+                                        && t2.local_x - t2.width / 2. < t3.local_x + t3.width / 2.
+                                        && t2.local_y - t2.height / 2. < t3.local_y + t3.height / 2.
+                                        && t2.local_y + t2.height / 2. > t3.local_y - t3.height / 2.
+                                    })
+                                    .is_none() {
                                     let t = ui_transforms.get_mut(event.target).unwrap();
                                     let p = parents.get_mut(event.target).unwrap();
 
@@ -140,9 +133,9 @@ impl<'s> System<'s> for SystemCustomUi {
 
                                     p.entity = other;
 
-                                    entities.delete(items.get(event.target).unwrap().dummy.unwrap()).expect("Failed to kill dummy item");
+                                    entities.delete(dummy).expect("Failed to kill dummy item");
 
-                                    continue 'oouter;
+                                    continue 'outer;
                                 }
                             }
                         }
@@ -207,7 +200,7 @@ impl<'s> System<'s> for SystemCustomUi {
                             
                             places.insert(*item, *place);
                         } else {
-                            continue 'oouter;
+                            continue 'outer;
                         }
                     }
 
