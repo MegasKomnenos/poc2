@@ -287,7 +287,7 @@ impl<'s> System<'s> for SystemMovementPlayer {
                                 let tilemap = (&tilemaps).join().next().unwrap();
                                 let coord = Vector3::new(coord[0], coord[1], coord[2]);
 
-                                if let Some(goal) = tilemap.to_tile(&coord, None) {
+                                if let Ok(goal) = tilemap.to_tile(&coord, None) {
                                     let (_, transform, mut movement) = (&player, &transforms, &mut movements).join().next().unwrap();
                                 
                                     let start = tilemap.to_tile(transform.translation(), None).unwrap();
@@ -495,7 +495,7 @@ impl<'s> System<'s> for SystemMovement {
                 let transform = transform.get_mut_unchecked();
 
                 for tilemap in (&mut tilemaps).join() {
-                    if let Some(_) = tilemap.to_tile(transform.translation(), None) {
+                    if let Ok(_) = tilemap.to_tile(transform.translation(), None) {
                         let mut velocity = tilemap.to_world(movement.targets.last().unwrap(), None) - transform.translation();
                         let distance = (velocity[0].powf(2.0) + velocity[1].powf(2.0) + velocity[2].powf(2.0)).sqrt();
 

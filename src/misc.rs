@@ -218,10 +218,10 @@ impl DrawTiles2DBounds for MiscTileBounds {
             
             let min = map
                 .to_tile(&top_left, None)
-                .unwrap_or_else(|| Point3::new(0, 0, 0));
+                .unwrap_or_else(|_| Point3::new(0, 0, 0));
             let max = map
                 .to_tile(&bottom_right, None)
-                .unwrap_or_else(|| Point3::new(map.dimensions().x - 1, map.dimensions().y - 1, 0));
+                .unwrap_or_else(|_| Point3::new(map.dimensions().x - 1, map.dimensions().y - 1, 0));
                 
             Region::new(min, max)
         } else {
